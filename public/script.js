@@ -1,10 +1,10 @@
 // Inicjalizacja mapy
-const map = L.map('map').setView([54.405, 18.623], 11); // Współrzędne początkowe
+const map = L.map('map').setView([54.51086917328015, 18.506788268877372], 11); // Współrzędne początkowe
 
 // Dodanie warstwy z OpenStreetMap
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 15,
-    minZoom: 9
+    maxZoom: 18,
+    minZoom: 6
 }).addTo(map);
 
 // Funkcja do ładowania markerów z pliku JSON
