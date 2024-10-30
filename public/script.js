@@ -1,14 +1,15 @@
 // Inicjalizacja mapy
-const map = L.map('map').setView([51.505, -0.09], 13); // Współrzędne początkowe
+const map = L.map('map').setView([54.405, 18.623], 11); // Współrzędne początkowe
 
 // Dodanie warstwy z OpenStreetMap
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
+    maxZoom: 15,
+    minZoom: 9
 }).addTo(map);
 
 // Funkcja do ładowania markerów z pliku JSON
 async function loadMarkers() {
-    const response = await fetch('markers.json');
+    const response = await fetch('/markers');
     const markers = await response.json();
     markers.forEach(marker => {
         L.marker([marker.lat, marker.lng]).addTo(map)
