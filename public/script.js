@@ -110,7 +110,8 @@ async function loadMarkers() {
     const markers = await response.json();
     markers.forEach(marker => {
         L.marker([marker.lat, marker.lng]).addTo(map)
-            .bindPopup(marker.name);
+            .bindPopup(marker.name)
+            .bindTooltip(marker.name, { permanent: false, direction: 'top' });
     });
 }
 
