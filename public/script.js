@@ -345,3 +345,29 @@ function checkLoginStatus() {
         showLoginContent();
     }
 }
+
+// Funkcja do wyświetlania komunikatu
+function showMessage(message) {
+    const messageContainer = document.getElementById("messageContainer");
+    const messageText = document.getElementById("messageText");
+    
+    // Ustawienie tekstu w dymku
+    messageText.textContent = message;
+
+    // Pokaż kontener z dymkiem
+    messageContainer.style.visibility = "visible";
+}
+
+// Funkcja do zamykania komunikatu
+function closeMessage() {
+    const messageContainer = document.getElementById("messageContainer");
+    
+    // Ukrycie kontenera z dymkiem
+    messageContainer.style.visibility = "hidden";
+}
+
+// Zastąpienie domyślnych alertów
+window.alert = function(message) {
+    showMessage(message);
+}
+
