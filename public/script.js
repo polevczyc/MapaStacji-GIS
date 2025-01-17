@@ -307,3 +307,41 @@ window.onload = checkLoginStatus;
 
 // Ładowanie markerów po załadowaniu mapy
 loadMarkers();
+
+// Pokazuje panel użytkownika i ukrywa inne elementy
+function showMainContent() {
+    document.getElementById('auth').style.display = 'none';
+    document.getElementById('userPanel').style.display = 'flex';
+    document.getElementById('controls').style.display = 'flex';
+    document.getElementById('map').style.display = 'block';
+}
+
+// Pokazuje tylko panel logowania/rejestracji
+function showLoginContent() {
+    document.getElementById('auth').style.display = 'flex';
+    document.getElementById('userPanel').style.display = 'none';
+    document.getElementById('controls').style.display = 'none';
+    document.getElementById('map').style.display = 'none';
+    document.getElementById('adminControls').style.display = 'none';
+}
+
+// Sprawdzanie stanu logowania
+function checkLoginStatus() {
+    const token = localStorage.getItem('token');
+    if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const username = payload.username;
+        const isAdmin = payload.isAdmin;
+
+        showUserPanel(username, isAdmin);
+        showMainContent();
+
+        if (isAdmin) {
+            document.getElementById('adminControls').style.display = 'flex';
+        } else {
+            document.getElementById('adminControls').style.display = 'none';
+        }
+    } else {
+        showLoginContent();
+    }
+}

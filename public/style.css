@@ -1,0 +1,187 @@
+/* Ogólne ustawienia dla ciała strony */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7f6;
+}
+
+/* Nagłówek strony */
+h1 {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 2.5rem;
+    color: #4a4a4a;
+    text-transform: uppercase;
+}
+
+/* Kontenery */
+#userPanel, #adminControls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px;
+    padding: 10px 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Ogólny styl przycisków */
+button {
+    padding: 12px 24px;
+    margin: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Typy przycisków */
+#calculateRoute {
+    background-color: #007bff; /* Niebieski */
+    color: white;
+}
+
+#calculateRoute:hover {
+    background-color: #0056b3;
+}
+
+#clearRoute {
+    background-color: #dc3545; /* Czerwony */
+    color: white;
+}
+
+#clearRoute:hover {
+    background-color: #c82333;
+}
+
+#setStart, #setEnd {
+    background-color: #28a745; /* Zielony */
+    color: white;
+}
+
+#setStart:hover, #setEnd:hover {
+    background-color: #218838;
+}
+
+#addMarker {
+    background-color: #ffc107; /* Żółty */
+    color: black;
+}
+
+#addMarker:hover {
+    background-color: #e0a800;
+}
+
+#removeMarker {
+    background-color: #17a2b8; /* Niebieski */
+    color: white;
+}
+
+#removeMarker:hover {
+    background-color: #138496;
+}
+
+#logoutButton {
+    background-color: #6c757d; /* Szary */
+    color: white;
+    border-radius: 5px;
+}
+
+#logoutButton:hover {
+    background-color: #5a6268;
+}
+
+/* Formularze logowania i rejestracji */
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+input {
+    margin: 8px;
+    padding: 12px;
+    width: 240px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+h2 {
+    text-align: center;
+    margin: 10px 0;
+}
+
+/* Map container */
+#map {
+    height: 500px;
+    width: 80%; /* Zmniejszenie szerokości mapy */
+    margin: 20px auto;
+    border-radius: 12px; /* Zaokrąglona ramka */
+    border: 4px solid #e6e6e6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Panel użytkownika */
+#userPanel {
+    background-color: #ffffff;
+    justify-content: space-between;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#userInfo {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* Panel logowania */
+#auth {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+/* Style dla okna z mapą, aby była responsywna */
+@media screen and (max-width: 768px) {
+    #map {
+        height: 400px;
+        width: 95%;
+    }
+
+    #controls {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    button {
+        width: 100%;
+        max-width: 200px;
+    }
+}
+
+/* Przycisk "Wyloguj" w panelu użytkownika */
+#logoutButton {
+    background-color: #dc3545;
+    margin-left: 10px;
+}
+
+#logoutButton:hover {
+    background-color: #c82333;
+}
