@@ -104,16 +104,206 @@ document.getElementById('clearRoute').addEventListener('click', clearRoute);
 // Dodanie obsługi kliknięć na mapie
 map.on('click', handleMapClick);
 
-// Funkcja do ładowania markerów z pliku JSON (stacje benzynowe)
+
+// Definicja funkcji checkLoginStatus
+function checkLoginStatus() {
+    const token = localStorage.getItem('token');
+    if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const username = payload.username;
+        const isAdmin = payload.isAdmin;
+        showUserPanel(username, isAdmin);
+
+        if (isAdmin) {
+            document.getElementById('adminControls').style.display = 'block'; // Pokaż przyciski admina
+        } else {
+            document.getElementById('adminControls').style.display = 'none';
+        }
+    } else {
+        hideUserPanel();
+    }
+}
+
+
+// Funkcja do ładowania markerów i przypisania im obsługi usuwania
 async function loadMarkers() {
-    const response = await fetch('/markers');
+    const response = await fetch('/markers'); // Pobieranie z lokalnego serwera Node.js
+    if (!response.ok) {
+        console.error('Błąd podczas ładowania markerów');
+        return;
+    }
+
     const markers = await response.json();
-    markers.forEach(marker => {
-        L.marker([marker.lat, marker.lng]).addTo(map)
-            .bindPopup(marker.name)
-            .bindTooltip(marker.name, { permanent: false, direction: 'top' });
+    markers.forEach(markerData => {
+        const marker = L.marker([markerData.lat, markerData.lng])
+            .addTo(map)
+            .bindPopup(markerData.name) // Wyświetlanie opisu po kliknięciu
+            .bindTooltip(markerData.name, { // Wyświetlanie opisu po najechaniu
+                permanent: false,
+                direction: 'top',
+                offset: [0, -10]
+            });
+
+        enableMarkerRemoval(marker, markerData.lat, markerData.lng); // Dodaj obsługę usuwania
     });
 }
 
-// Ładowanie markerów stacji benzynowych po załadowaniu mapy
+// Obsługa kliknięcia na marker w trybie usuwania
+function enableMarkerRemoval(marker, lat, lng) {
+    marker.on('click', async (e) => {
+        if (activeAdminAction === 'remove') {
+            e.originalEvent.stopPropagation(); // Zatrzymaj domyślną obsługę kliknięcia
+
+            const confirmDelete = confirm('Czy na pewno chcesz usunąć ten marker?');
+            if (!confirmDelete) {
+                activeAdminAction = null; // Anuluj usuwanie
+                return;
+            }
+
+            // Usuń marker z serwera
+            const response = await fetch(`/markers?lat=${lat}&lng=${lng}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (response.ok) {
+                map.removeLayer(marker); // Usuń marker z mapy
+                alert('Marker został usunięty.');
+            } else {
+                alert('Błąd podczas usuwania markera.');
+            }
+
+            activeAdminAction = null; // Zresetuj akcję
+        }
+    });
+}
+
+let activeAdminAction = null; // Przechowuje aktywną akcję admina (dodawanie/usuwanie)
+
+// Dodawanie markera
+document.getElementById('addMarker').addEventListener('click', () => {
+    activeAdminAction = 'add';
+    alert('Kliknij na mapie, aby dodać marker.');
+});
+
+map.on('click', async (e) => {
+    if (activeAdminAction === 'add') {
+        const { lat, lng } = e.latlng;
+
+        const description = prompt('Wprowadź opis markera:');
+        if (!description) {
+            alert('Dodawanie markera zostało anulowane.');
+            return;
+        }
+
+        // Dodaj marker na mapę
+        const marker = L.marker([lat, lng])
+            .addTo(map)
+            .bindPopup(description) // Wyświetlanie opisu po kliknięciu
+            .bindTooltip(description, { // Wyświetlanie opisu po najechaniu
+                permanent: false,
+                direction: 'top',
+                offset: [0, -10]
+            });
+
+        enableMarkerRemoval(marker, lat, lng); // Przypisz obsługę usuwania nowo dodanemu markerowi
+
+        // Wyślij dane do serwera
+        const response = await fetch('/markers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ lat, lng, name: description })
+        });
+
+        if (response.ok) {
+            alert('Marker został dodany.');
+        } else {
+            alert('Błąd podczas dodawania markera.');
+            map.removeLayer(marker); // Usuń marker w razie błędu
+        }
+
+        activeAdminAction = null; // Zresetuj akcję
+    }
+});
+
+// Usuwanie markera
+document.getElementById('removeMarker').addEventListener('click', () => {
+    activeAdminAction = 'remove';
+    alert('Kliknij na marker, aby go usunąć.');
+});
+
+// Wyświetlanie panelu użytkownika
+function showUserPanel(username, isAdmin) {
+    document.getElementById('auth').style.display = 'none'; // Ukryj formularze logowania/rejestracji
+    document.getElementById('userPanel').style.display = 'block';
+
+    const adminLabel = isAdmin ? ' [Konto administratora]' : ''; // Sprawdzenie, czy użytkownik jest administratorem
+    document.getElementById('userInfo').textContent = `Zalogowano jako: ${username}${adminLabel}`;
+}
+
+// Ukrywanie panelu użytkownika
+function hideUserPanel() {
+    document.getElementById('auth').style.display = 'block'; // Pokaż formularze logowania/rejestracji
+    document.getElementById('userPanel').style.display = 'none';
+}
+
+// Logowanie użytkownika
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    const response = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+
+    if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        checkLoginStatus();
+        alert('Zalogowano pomyślnie');
+        document.getElementById('loginForm').reset();
+    } else {
+        alert('Błąd logowania');
+    }
+});
+
+// Rejestracja użytkownika
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('regUsername').value;
+    const password = document.getElementById('regPassword').value;
+
+    const response = await fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+
+    if (response.ok) {
+        alert('Konto zostało utworzone. Możesz się teraz zalogować.');
+        document.getElementById('registerForm').reset();
+    } else {
+        alert('Błąd podczas rejestracji. Sprawdź, czy nazwa użytkownika jest unikalna.');
+    }
+});
+
+// Wylogowanie użytkownika
+document.getElementById('logoutButton').addEventListener('click', () => {
+    localStorage.removeItem('token'); // Usunięcie tokena z pamięci
+    checkLoginStatus();
+    alert('Wylogowano pomyślnie');
+});
+
+// Sprawdzanie stanu logowania przy załadowaniu strony
+window.onload = checkLoginStatus;
+
+// Ładowanie markerów po załadowaniu mapy
 loadMarkers();

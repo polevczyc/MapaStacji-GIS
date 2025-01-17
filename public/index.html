@@ -17,12 +17,34 @@
 </head>
 <body>
     <h1>Mapa Stacji Benzynowych</h1>
+    <div id="userPanel" style="display: none;">
+        <span id="userInfo"></span>
+        <button id="logoutButton">Wyloguj</button>
+    </div>
     <div id="controls">
         <button id="setStart">Ustaw Punkt Początkowy</button>
         <button id="setEnd">Ustaw Punkt Końcowy</button>
         <button id="calculateRoute">Wyznacz Trasę</button>
         <button id="clearRoute">Usuń Trasę</button>
     </div>
+    <div id="adminControls" style="display: none;">
+        <button id="addMarker">Dodaj marker</button>
+        <button id="removeMarker">Usuń marker</button>
+    </div>
+    <div id="auth">
+        <h2>Logowanie</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Nazwa użytkownika" required>
+            <input type="password" id="password" placeholder="Hasło" required>
+            <button type="submit">Zaloguj</button>
+        </form>
+        <h2>Rejestracja</h2>
+        <form id="registerForm">
+            <input type="text" id="regUsername" placeholder="Nazwa użytkownika" required>
+            <input type="password" id="regPassword" placeholder="Hasło" required>
+            <button type="submit">Zarejestruj</button>
+        </form>
+    </div>    
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="script.js"></script>
