@@ -1,9 +1,13 @@
 /* Ogólne ustawienia dla ciała strony */
-body {
+body, html {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 0;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
     background-color: #f4f7f6;
+    flex-direction: column;
 }
 
 /* Nagłówek strony */
@@ -128,7 +132,8 @@ h2 {
 
 /* Map container */
 #map {
-    height: 500px;
+    flex-grow: 1;
+
     width: 80%; /* Zmniejszenie szerokości mapy */
     margin: 20px auto;
     border-radius: 12px; /* Zaokrąglona ramka */
