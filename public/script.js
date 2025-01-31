@@ -244,7 +244,7 @@ function showUserPanel(username, isAdmin) {
     document.getElementById('auth').style.display = 'none'; // Ukryj formularze logowania/rejestracji
     document.getElementById('userPanel').style.display = 'block';
 
-    const adminLabel = isAdmin ? ' [Konto administratora]' : ''; // Sprawdzenie, czy użytkownik jest administratorem
+    const adminLabel = isAdmin ? ' [Administrator]' : ''; // Sprawdzenie, czy użytkownik jest administratorem
     document.getElementById('userInfo').textContent = `Zalogowano jako: ${username}${adminLabel}`;
 }
 
@@ -373,3 +373,6 @@ window.alert = function(message) {
     showMessage(message);
 }
 
+document.getElementById("themeSwitch").addEventListener("change", function() {
+    document.body.classList.toggle("dark-mode", this.checked);
+});
