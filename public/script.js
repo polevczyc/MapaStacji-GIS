@@ -23,6 +23,50 @@ const endIcon = L.icon({
     iconAnchor: [16, 32]
 });
 
+// Kolorowe markery dla stacji
+
+const orlenIcon = L.divIcon({
+    className: 'custom-icon',
+    html: '<div style="background-color: red; width: 32px; height: 32px; border-radius: 50%;"></div>'
+});
+
+const shellIcon = L.divIcon({
+    className: 'custom-icon',
+    html: '<div style="background-color: yellow; width: 32px; height: 32px; border-radius: 50%;"></div>'
+});
+
+const bpIcon = L.divIcon({
+    className: 'custom-icon',
+    html: '<div style="background-color: green; width: 32px; height: 32px; border-radius: 50%;"></div>'
+});
+
+const moyaIcon = L.divIcon({
+    className: 'custom-icon',
+    html: '<div style="background-color: darkblue; width: 32px; height: 32px; border-radius: 50%;"></div>'
+});
+
+const molIcon = L.divIcon({
+    className: 'custom-icon',
+    html: '<div style="background-color: darkgreen; width: 32px; height: 32px; border-radius: 50%;"></div>'
+});
+
+const amicEnergyIcon = L.divIcon({
+    className: 'custom-icon',
+    html: '<div style="background-color: pink; width: 32px; height: 32px; border-radius: 50%;"></div>'
+});
+
+const circleKIcon = L.divIcon({
+    className: 'custom-icon',
+    html: '<div style="background-color: darkred; width: 32px; height: 32px; border-radius: 50%;"></div>'
+});
+
+const podZaglamiIcon = L.divIcon({
+    className: 'custom-icon',
+    html: '<div style="background-color: lightgreen; width: 32px; height: 32px; border-radius: 50%;"></div>'
+});
+
+
+
 // Punkty trasy
 let startPoint = null;
 let endPoint = null;
@@ -135,18 +179,67 @@ async function loadMarkers() {
 
     const markers = await response.json();
     markers.forEach(markerData => {
-        const marker = L.marker([markerData.lat, markerData.lng])
-            .addTo(map)
-            .bindPopup(markerData.name) // Wyświetlanie opisu po kliknięciu
-            .bindTooltip(markerData.name, { // Wyświetlanie opisu po najechaniu
-                permanent: false,
-                direction: 'top',
-                offset: [0, -10]
-            });
+        let icon;
+        switch (markerData.name) {
+            case 'Orlen':
+                icon = orlenIcon;
+                break;
+            case 'Shell':
+                icon = shellIcon;
+                break;
+            case 'BP':
+                icon = bpIcon;
+                break;
+            case 'MOYA':
+                icon = moyaIcon;
+                break;
+            case 'MOL':
+                icon = molIcon;
+                break;
+            case 'AMIC Energy':
+                icon = amicEnergyIcon;
+                break;
+            case 'Circle K':
+                icon = circleKIcon;
+                break;
+            case 'Pod Żaglami':
+                icon = podZaglamiIcon;
+                break;
+            default:
+                icon = L.divIcon({ className: 'custom-icon', html: '<div style="background-color: gray; width: 32px; height: 32px; border-radius: 50%;"></div>' });
+                break;
+        }
 
+        const marker = L.marker([markerData.lat, markerData.lng], { icon: icon })
+        .addTo(map)
+        .bindTooltip(markerData.name)
+        .bindPopup(`
+            <strong>${markerData.name}</strong><br>
+            ul. ${markerData.address}<br><br>
+            Godziny otwarcia: ${markerData.open} - ${markerData.close}<br>
+            Dostępne paliwa: ${getAvailableFuels(markerData)}<br>
+        `, {
+            permanent: false,
+            direction: 'top',
+            offset: [0, -10]
+        });
+    
+    // Funkcja, która sprawdza, które paliwa są dostępne i zwraca je jako tekst
+    function getAvailableFuels(data) {
+        let availableFuels = [];
+    
+        if (data["95"]) availableFuels.push("95");
+        if (data["98"]) availableFuels.push("98");
+        if (data["100"]) availableFuels.push("100");
+        if (data["lpg"]) availableFuels.push("LPG");
+        if (data["on"]) availableFuels.push("ON");
+    
+        return availableFuels.length > 0 ? availableFuels.join(", ") : "Brak paliw";
+    }
         enableMarkerRemoval(marker, markerData.lat, markerData.lng); // Dodaj obsługę usuwania
     });
 }
+
 
 // Obsługa kliknięcia na marker w trybie usuwania
 function enableMarkerRemoval(marker, lat, lng) {
@@ -374,3 +467,10 @@ window.alert = function(message) {
 document.getElementById("themeSwitch").addEventListener("change", function() {
     document.body.classList.toggle("dark-mode", this.checked);
 });
+
+const markersData = [
+    { lat: 52.22977, lng: 21.01178, name: 'Orlen' },
+    { lat: 52.22981, lng: 21.01179, name: 'Shell' },
+    { lat: 52.22985, lng: 21.01180, name: 'BP' },
+    // Dodaj inne stacje
+];
