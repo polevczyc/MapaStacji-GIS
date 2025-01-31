@@ -136,10 +136,12 @@ let activeAction = null;
 
 document.getElementById('setStart').addEventListener('click', () => {
     activeAction = 'start';
+    alert("Kliknij na mapie, aby ustawić punkt początkowy");
 });
 
 document.getElementById('setEnd').addEventListener('click', () => {
     activeAction = 'end';
+    alert("Kliknij na mapie, aby ustawić punkt końcowy");
 });
 
 document.getElementById('calculateRoute').addEventListener('click', calculateRoute);
