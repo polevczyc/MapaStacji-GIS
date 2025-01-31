@@ -371,3 +371,6 @@ window.alert = function(message) {
     showMessage(message);
 }
 
+document.getElementById("themeSwitch").addEventListener("change", function() {
+    document.body.classList.toggle("dark-mode", this.checked);
+});

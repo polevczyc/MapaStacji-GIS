@@ -6,17 +6,14 @@
     <title>Mapa Stacji Benzynowych</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
-    <style>
-        #map { height: 600px; }
-        #controls {
-            margin: 10px;
-        }
-        button {
-            margin-right: 5px;
-        }
-    </style>
 </head>
 <body>
+    <div id="themeSwitchContainer">
+        <label class="switch">
+            <input type="checkbox" id="themeSwitch">
+            <span class="slider round"></span>
+        </label>
+    </div>
     <div id="messageContainer" class="hidden">
         <div id="messageBox" class="messageBox">
             <p id="messageText"></p>
