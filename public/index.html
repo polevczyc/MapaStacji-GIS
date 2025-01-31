@@ -50,9 +50,17 @@
             <button type="submit">Zarejestruj</button>
         </form>
     </div>   
-    <div id="filters">  
-    </div> 
-    <div id="map"></div>
+    <div id="mapContainer">
+        <div id="map"></div>
+        <div id="filters">
+            <h3>Oferowane paliwa</h3>
+            <label><input type="checkbox" class="fuelFilter" value="95" checked> 95</label>
+            <label><input type="checkbox" class="fuelFilter" value="98" checked> 98</label>
+            <label><input type="checkbox" class="fuelFilter" value="100" checked> 100</label>
+            <label><input type="checkbox" class="fuelFilter" value="on" checked> ON</label>
+            <label><input type="checkbox" class="fuelFilter" value="lpg" checked> LPG</label>
+        </div>
+    </div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="script.js"></script>
 </body>

@@ -169,77 +169,103 @@ function checkLoginStatus() {
         hideUserPanel();
     }
 }
+// Funkcja pobierająca wybrane filtry paliwa
+function getSelectedFuels() {
+    return Array.from(document.querySelectorAll('.fuelFilter:checked'))
+        .map(checkbox => checkbox.value.toString()); // Konwersja na string
+}
 
 
-// Funkcja do ładowania markerów i przypisania im obsługi usuwania
-async function loadMarkers() {
-    const response = await fetch('/markers'); // Pobieranie z lokalnego serwera Node.js
-    if (!response.ok) {
-        console.error('Błąd podczas ładowania markerów');
-        return;
-    }
+async function loadStations() {
+    console.log("Ładowanie stacji...");
 
-    const markers = await response.json();
-    markers.forEach(markerData => {
-        let icon;
-        switch (markerData.name) {
-            case 'Orlen':
-                icon = orlenIcon;
-                break;
-            case 'Shell':
-                icon = shellIcon;
-                break;
-            case 'BP':
-                icon = bpIcon;
-                break;
-            case 'MOYA':
-                icon = moyaIcon;
-                break;
-            case 'MOL':
-                icon = molIcon;
-                break;
-            case 'AMIC Energy':
-                icon = amicEnergyIcon;
-                break;
-            case 'Circle K':
-                icon = circleKIcon;
-                break;
-            case 'Pod Żaglami':
-                icon = podZaglamiIcon;
-                break;
-            default:
-                icon = L.divIcon({ className: 'custom-icon', html: '<div style="background-color: gray; width: 32px; height: 32px; border-radius: 50%;"></div>' });
-                break;
-        }
+    const selectedFuels = getSelectedFuels();
+    console.log("Wybrane paliwa:", selectedFuels);
 
-        const marker = L.marker([markerData.lat, markerData.lng], { icon: icon })
-        .addTo(map)
-        .bindTooltip(markerData.name)
-        .bindPopup(`
-            <strong>${markerData.name}</strong><br>
-            ul. ${markerData.address}<br><br>
-            Godziny otwarcia: ${markerData.open} - ${markerData.close}<br>
-            Dostępne paliwa: ${getAvailableFuels(markerData)}<br>
-        `, {
-            permanent: false,
-            direction: 'top',
-            offset: [0, -10]
+    stationLayer.clearLayers(); // Czyszczenie warstwy stacji
+
+    try {
+        const response = await fetch('/markers'); // Pobieranie danych stacji z serwera
+        if (!response.ok) throw new Error('Błąd podczas ładowania stacji');
+
+        const stations = await response.json();
+        console.log("Pobrane stacje:", stations);
+
+        stations.forEach(station => {
+            // Konwersja dostępnych paliw do tablicy (np. ["95", "ON"])
+            const availableFuels = Object.keys(station)
+                .filter(key => station[key] === true)
+                .map(fuel => fuel.toString()); // Konwersja na stringi dla zgodności
+
+            console.log(`Stacja: ${station.name}, Dostępne paliwa:`, availableFuels);
+
+            // Sprawdzenie czy stacja zawiera wybrane paliwa
+            if (!selectedFuels.some(fuel => availableFuels.includes(fuel))) {
+                console.log(`Pomijam stację: ${station.name} - nie zawiera wybranego paliwa`);
+                return;
+            }
+
+            // Wybór ikony na podstawie nazwy stacji
+            let icon = getStationIcon(station.name);
+
+            // Tworzenie markera
+            const marker = L.marker([station.lat, station.lng], { icon: icon })
+                .addTo(stationLayer)
+                .bindTooltip(station.name)
+                .bindPopup(`
+                    <strong>${station.name}</strong><br>
+                    ul. ${station.address}<br><br>
+                    Godziny otwarcia: ${station.open} - ${station.close}<br>
+                    Dostępne paliwa: ${availableFuels.join(", ") || "Brak paliw"}<br>
+                `, {
+                    permanent: false,
+                    direction: 'top',
+                    offset: [0, -10]
+                });
+
+            enableMarkerRemoval(marker, station.lat, station.lng);
         });
-    
-    // Funkcja, która sprawdza, które paliwa są dostępne i zwraca je jako tekst
-    function getAvailableFuels(data) {
-        let availableFuels = [];
-    
-        if (data["95"]) availableFuels.push("95");
-        if (data["98"]) availableFuels.push("98");
-        if (data["100"]) availableFuels.push("100");
-        if (data["lpg"]) availableFuels.push("LPG");
-        if (data["on"]) availableFuels.push("ON");
-    
-        return availableFuels.length > 0 ? availableFuels.join(", ") : "Brak paliw";
+
+        console.log("Ładowanie stacji zakończone.");
+    } catch (error) {
+        console.error(error.message);
     }
-        enableMarkerRemoval(marker, markerData.lat, markerData.lng); // Dodaj obsługę usuwania
+}
+// Obsługa zmiany checkboxów w czasie rzeczywistym
+document.querySelectorAll('.fuelFilter').forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+        console.log("Zmieniono filtr paliwa, przeładowuję markery...");
+        loadStations();
     });
+});
+
+// Funkcja zwracająca ikonę stacji
+function getStationIcon(name) {
+    switch (name) {
+        case 'Orlen': return orlenIcon;
+        case 'Shell': return shellIcon;
+        case 'BP': return bpIcon;
+        case 'MOYA': return moyaIcon;
+        case 'MOL': return molIcon;
+        case 'AMIC Energy': return amicEnergyIcon;
+        case 'Circle K': return circleKIcon;
+        case 'Pod Żaglami': return podZaglamiIcon;
+        default:
+            return L.divIcon({ className: 'custom-icon', html: '<div style="background-color: gray; width: 32px; height: 32px; border-radius: 50%;"></div>' });
+    }
+}
+
+// Funkcja, która zwraca listę dostępnych paliw
+function getAvailableFuels(data) {
+    let availableFuels = [];
+
+    if (data["95"]) availableFuels.push("95");
+    if (data["98"]) availableFuels.push("98");
+    if (data["100"]) availableFuels.push("100");
+    if (data["lpg"]) availableFuels.push("LPG");
+    if (data["on"]) availableFuels.push("ON");
+
+    return availableFuels.length > 0 ? availableFuels.join(", ") : "Brak paliw";
 }
 
 
@@ -401,7 +427,7 @@ document.getElementById('logoutButton').addEventListener('click', () => {
 window.onload = checkLoginStatus;
 
 // Ładowanie markerów po załadowaniu mapy
-loadMarkers();
+//loadMarkers();
 
 // Pokazuje panel użytkownika i ukrywa inne elementy
 function showMainContent() {
@@ -430,6 +456,7 @@ function checkLoginStatus() {
 
         showUserPanel(username, isAdmin);
         showMainContent();
+        toggleFilters(true);
 
         if (isAdmin) {
             document.getElementById('adminControls').style.display = 'flex';
@@ -438,6 +465,7 @@ function checkLoginStatus() {
         }
     } else {
         showLoginContent();
+        toggleFilters(false); // Ukryj filtry
     }
 }
 
@@ -470,9 +498,43 @@ document.getElementById("themeSwitch").addEventListener("change", function() {
     document.body.classList.toggle("dark-mode", this.checked);
 });
 
-const markersData = [
-    { lat: 52.22977, lng: 21.01178, name: 'Orlen' },
-    { lat: 52.22981, lng: 21.01179, name: 'Shell' },
-    { lat: 52.22985, lng: 21.01180, name: 'BP' },
-    // Dodaj inne stacje
-];
+const stationLayer = L.layerGroup().addTo(map);
+/*
+// Funkcja do ładowania i filtrowania stacji
+async function loadFilteredStations() {
+    const selectedFuels = getSelectedFuels();
+    stationLayer.clearLayers();
+    
+    const response = await fetch('/markers'); // Pobierz dane stacji z serwera
+    if (!response.ok) {
+        console.error('Błąd podczas ładowania stacji');
+        return;
+    }
+    
+    const stations = await response.json();
+    stations.forEach(station => {
+        const hasFuel = selectedFuels.some(fuel => station[fuel]); // Sprawdza, czy stacja ma wybrane paliwo
+        if (hasFuel) {
+            const marker = L.marker([station.lat, station.lng])
+                .addTo(stationLayer)
+                //.bindPopup(`${station.name} <br> Adres: ${station.address}`);
+                .bindTooltip(`${station.name} <br> Adres: ${station.address}`, { // Wyświetlanie opisu po najechaniu
+                    permanent: false,
+                    direction: 'top',
+                    offset: [0, -10]
+                });
+        }
+    });
+}
+*/
+
+// Funkcja do pokazywania/ukrywania filtrów po zalogowaniu
+function toggleFilters(visible) {
+    document.getElementById('filters').style.display = visible ? 'block' : 'none';
+}
+
+// Upewnienie się, że dane ładują się na starcie
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("Strona załadowana, inicjalizuję mapę...");
+    loadStations();
+});
