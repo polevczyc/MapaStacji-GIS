@@ -518,34 +518,6 @@ document.getElementById("themeSwitch").addEventListener("change", function() {
 });
 
 const stationLayer = L.layerGroup().addTo(map);
-/*
-// Funkcja do ładowania i filtrowania stacji
-async function loadFilteredStations() {
-    const selectedFuels = getSelectedFuels();
-    stationLayer.clearLayers();
-    
-    const response = await fetch('/markers'); // Pobierz dane stacji z serwera
-    if (!response.ok) {
-        console.error('Błąd podczas ładowania stacji');
-        return;
-    }
-    
-    const stations = await response.json();
-    stations.forEach(station => {
-        const hasFuel = selectedFuels.some(fuel => station[fuel]); // Sprawdza, czy stacja ma wybrane paliwo
-        if (hasFuel) {
-            const marker = L.marker([station.lat, station.lng])
-                .addTo(stationLayer)
-                //.bindPopup(`${station.name} <br> Adres: ${station.address}`);
-                .bindTooltip(`${station.name} <br> Adres: ${station.address}`, { // Wyświetlanie opisu po najechaniu
-                    permanent: false,
-                    direction: 'top',
-                    offset: [0, -10]
-                });
-        }
-    });
-}
-*/
 
 // Funkcja do pokazywania/ukrywania filtrów po zalogowaniu
 function toggleFilters(visible) {
