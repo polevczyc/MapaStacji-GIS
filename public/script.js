@@ -25,47 +25,66 @@ const endIcon = L.icon({
 
 // Kolorowe markery dla stacji
 
+// const  = L.divIcon({
+//     className: 'custom-icon',
+//     html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
+//           '<img src="" style="width: 30px; height: 30px; object-fit: contain;" />' +
+//           '</div>'
+// });
+
 const orlenIcon = L.divIcon({
     className: 'custom-icon',
-    html: '<div style="background-color: red; width: 32px; height: 32px; border-radius: 50%;"></div>'
+    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
+          '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOYwBMkqpW77rZwpZQoqd_dz3HgwzeEqJ5eQ&s" style="width: 30px; height: 30px; object-fit: contain;" />' +
+          '</div>'
 });
 
 const shellIcon = L.divIcon({
     className: 'custom-icon',
-    html: '<div style="background-color: yellow; width: 32px; height: 32px; border-radius: 50%;"></div>'
+    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
+          '<img src="https://upload.wikimedia.org/wikipedia/en/thumb/e/e8/Shell_logo.svg/1024px-Shell_logo.svg.png" style="width: 30px; height: 30px; object-fit: contain;" />' +
+          '</div>'
 });
 
 const bpIcon = L.divIcon({
     className: 'custom-icon',
-    html: '<div style="background-color: green; width: 32px; height: 32px; border-radius: 50%;"></div>'
+    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
+          '<img src="https://www.bp.com/apps/settings/wcm/designs/refresh/bp/images/navigation/bp-logo.svg" style="width: 30px; height: 30px; object-fit: contain;" />' +
+          '</div>'
 });
 
 const moyaIcon = L.divIcon({
     className: 'custom-icon',
-    html: '<div style="background-color: darkblue; width: 32px; height: 32px; border-radius: 50%;"></div>'
+    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
+          '<img src="https://instreamgroup.com/wp-content/uploads/2020/10/moya-duze.png" style="width: 30px; height: 30px; object-fit: contain;" />' +
+          '</div>'
 });
 
 const molIcon = L.divIcon({
     className: 'custom-icon',
-    html: '<div style="background-color: darkgreen; width: 32px; height: 32px; border-radius: 50%;"></div>'
+    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
+          '<img src="https://molpolska.pl/img/logo-mol-colorful.88751645.svg" style="width: 30px; height: 30px; object-fit: contain;" />' +
+          '</div>'
 });
 
 const amicEnergyIcon = L.divIcon({
     className: 'custom-icon',
-    html: '<div style="background-color: pink; width: 32px; height: 32px; border-radius: 50%;"></div>'
+    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
+          '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJob7yZyCsmByf8rWXDKS2kNBM7C7MdTmNXg&s" style="width: 30px; height: 30px; object-fit: contain;" />' +
+          '</div>'
 });
 
 const circleKIcon = L.divIcon({
     className: 'custom-icon',
-    html: '<div style="background-color: darkred; width: 32px; height: 32px; border-radius: 50%;"></div>'
+    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
+          '<img src="https://e7.pngegg.com/pngimages/157/520/png-clipart-circle-k-retail-convenience-shop-business-franchising-business-text-rectangle-thumbnail.png" style="width: 30px; height: 30px; object-fit: contain;" />' +
+          '</div>'
 });
 
 const podZaglamiIcon = L.divIcon({
     className: 'custom-icon',
-    html: '<div style="background-color: lightgreen; width: 32px; height: 32px; border-radius: 50%;"></div>'
+    html: '<div style="background-color: green; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;"</div>'
 });
-
-
 
 // Punkty trasy
 let startPoint = null;
