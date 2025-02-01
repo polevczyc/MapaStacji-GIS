@@ -54,7 +54,7 @@ npm install bcrypt jsonwebtoken body-parser fs
 - zainstaluj [Node.js](https://nodejs.org/en/download)
 - zainstaluj framework express oraz bazę danych MongoDB:
 ```
-npm install express mongoose
+npm install express mongoose cors
 ```
 
 ### 3. Uruchomienie
@@ -62,6 +62,10 @@ npm install express mongoose
 - wpisz poniższą komendę w terminalu:
 ```
 node app.js
+```
+- otwórz nowy terminal i wpisz:
+```
+node server.js
 ```
 
 ## Autorzy
