@@ -565,3 +565,38 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Strona załadowana, inicjalizuję mapę...");
     loadStations();
 });
+document.addEventListener("DOMContentLoaded", function () {
+    const messageContainer = document.getElementById("messageContainer");
+    const messageBox = document.getElementById("messageBox");
+    const messageText = document.getElementById("messageText");
+    const closeButton = messageBox.querySelector("button");
+    const setStartButton = document.getElementById("setStart");
+    const setEndButton = document.getElementById("setEnd");
+
+    function showMessage(text) {
+        messageText.textContent = text;
+        messageContainer.style.visibility = "visible";
+        closeButton.focus(); // Ustawienie fokusu na przycisk zamykania
+    }
+
+    function closeMessage() {
+        messageContainer.style.visibility = "hidden";
+    }
+
+    // Nasłuchiwanie klawisza Enter do zamknięcia alertu
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" && messageContainer.style.visibility === "visible") {
+            closeMessage();
+        }
+    });
+
+    setStartButton.addEventListener("click", function () {
+        showMessage("Wybierz punkt początkowy na mapie.");
+    });
+
+    setEndButton.addEventListener("click", function () {
+        showMessage("Wybierz punkt końcowy na mapie.");
+    });
+
+    window.closeMessage = closeMessage;
+});
