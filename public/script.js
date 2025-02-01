@@ -111,8 +111,34 @@ function handleMapClick(e) {
     }
     activeAction = null; // Resetuj aktywną akcję
 }
+function decodePolyline(encoded) {
+    let points = [];
+    let index = 0, lat = 0, lng = 0;
 
-// Wyznaczanie trasy
+    while (index < encoded.length) {
+        let shift = 0, result = 0, byte;
+        do {
+            byte = encoded.charCodeAt(index++) - 63;
+            result |= (byte & 0x1F) << shift;
+            shift += 5;
+        } while (byte >= 0x20);
+        let deltaLat = (result & 1) ? ~(result >> 1) : (result >> 1);
+        lat += deltaLat;
+
+        shift = 0, result = 0;
+        do {
+            byte = encoded.charCodeAt(index++) - 63;
+            result |= (byte & 0x1F) << shift;
+            shift += 5;
+        } while (byte >= 0x20);
+        let deltaLng = (result & 1) ? ~(result >> 1) : (result >> 1);
+        lng += deltaLng;
+
+        points.push([lat / 1e5, lng / 1e5]);
+    }
+    return points;
+}
+
 async function calculateRoute() {
     if (!startPoint || !endPoint) {
         alert("Musisz ustawić punkt początkowy i końcowy!");
@@ -122,21 +148,31 @@ async function calculateRoute() {
     const startCoords = startPoint.getLatLng();
     const endCoords = endPoint.getLatLng();
 
-    const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf6248f19cceb9aca24d8fa6c374d071ae2198&start=${startCoords.lng},${startCoords.lat}&end=${endCoords.lng},${endCoords.lat}`;
+    const proxyUrl = `http://localhost:3001/directions?origin=${startCoords.lat},${startCoords.lng}&destination=${endCoords.lat},${endCoords.lng}`;
 
-    const response = await fetch(url);
-    if (!response.ok) {
+    try {
+        const response = await fetch(proxyUrl);
+        const data = await response.json();
+
+        if (data.status !== "OK") {
+            alert("Błąd podczas pobierania trasy: " + data.status);
+            return;
+        }
+
+        // Pobranie współrzędnych trasy
+        const routeCoords = data.routes[0].legs[0].steps.flatMap(step => {
+            return step.polyline ? decodePolyline(step.polyline.points) : [];
+        });
+
+        // Czyścimy starą trasę i dodajemy nową
+        routeLayer.clearLayers();
+        L.polyline(routeCoords, { color: 'blue' }).addTo(routeLayer);
+
+    } catch (error) {
+        console.error("Błąd:", error);
         alert("Błąd podczas pobierania trasy!");
-        return;
     }
-
-    const data = await response.json();
-    const routeCoords = data.features[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
-
-    routeLayer.clearLayers();
-    L.polyline(routeCoords, { color: 'blue' }).addTo(routeLayer);
 }
-
 // Usuwanie trasy
 function clearRoute() {
     routeLayer.clearLayers(); // Usuń trasę
