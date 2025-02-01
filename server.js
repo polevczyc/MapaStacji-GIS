@@ -2,10 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 
+import API_KEY from "./api_key";
+
 const app = express();
 app.use(cors());
-
-const API_KEY = "AIzaSyCZykhXWPV28-JrQpTmwWkDKqL7IHzegck"; 
 
 app.get("/directions", async (req, res) => {
     const { origin, destination } = req.query;
