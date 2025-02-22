@@ -35,6 +35,8 @@ Projekt wykorzystuje następujące technologie:
 ### 1. Klonowanie repozytorium:
 ```
 git clone https://github.com/polevczyc/MapaStacji-GIS.git
+```
+```
 cd MapaStacji-GIS
 ```
 
