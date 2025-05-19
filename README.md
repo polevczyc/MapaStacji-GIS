@@ -1,8 +1,6 @@
 ﻿# PROJEKT: SYSTEMY INFORMACJI PRZESTRZENNEJ (GIS)
 
-**Mapa lokalizacji stacji benzynowych w wybranym mieście w Polsce.**
-
-Projekt wykonany w ramach zajęć **Systemy informacji przestrzennej (GIS)** na Politechnice Gdańskiej.
+**Mapa lokalizacji stacji benzynowych w wybranym mieście w Polsce. (Gdynia)**
 
 ---
 
@@ -37,6 +35,8 @@ Projekt wykorzystuje następujące technologie:
 ### 1. Klonowanie repozytorium:
 ```
 git clone https://github.com/polevczyc/MapaStacji-GIS.git
+```
+```
 cd MapaStacji-GIS
 ```
 
