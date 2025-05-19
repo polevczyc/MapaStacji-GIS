@@ -67,6 +67,10 @@ node app.js
 ```
 node server.js
 ```
+- otwórz przeglądarkę i wpisz
+```
+localhost:3000
+```
 
 ## Autorzy
 - **Aleksander Piszczatyn** 192575 | [GitHub](https://github.com/apiszczatyn)
