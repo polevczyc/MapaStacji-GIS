@@ -34,17 +34,121 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
+// Schemat i model Oceny
+const ratingSchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    station: { type: mongoose.Schema.Types.ObjectId, ref: 'Marker', required: true },
+    rating: { type: Number, min: 1, max: 5, required: true },
+}, { timestamps: true });
+
+const Rating = mongoose.model('Rating', ratingSchema);
+
 // Middleware do weryfikacji tokena JWT
 function authenticateToken(req, res, next) {
-    const token = req.headers['authorization']?.split(' ')[1];
-    if (!token) return res.sendStatus(401);
-
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403);
-        req.user = user;
-        next();
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+      console.log('❌ Brak tokena w nagłówku');
+      return res.sendStatus(401);
+    }
+  
+    jwt.verify(token, JWT_SECRET, (err, payload) => {
+      if (err) {
+        console.log('❌ JWT verify error:', err.name, err.message);
+        return res.sendStatus(403);
+      }
+      console.log('✅ JWT payload:', payload);
+      req.user = payload;
+      req.user = {
+        _id: payload.id, 
+        username: payload.username,
+        isAdmin: payload.isAdmin
+      };
+      next();
     });
-}
+
+  }
+
+// Wystawianie lub aktualizacja oceny (tylko zalogowani użytkownicy)
+app.post('/ratings', authenticateToken, async (req, res) => {
+    // 1) Wyciągamy userId z middleware
+    const userId = req.user.id || req.user._id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Brak uprawnień' });
+    }
+    console.log('🐛 POST /ratings — req.user:', req.user);
+  
+    const { stationId, rating } = req.body;
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Ocena musi być w zakresie 1–5' });
+    }
+  
+    // 2) Spróbuj skonwertować stationId na ObjectId, żeby Mongoose nie musiał tego robić
+    let stationObjId;
+    try {
+      stationObjId = new mongoose.Types.ObjectId(stationId);
+    } catch (e) {
+      return res.status(400).json({ error: 'Nieprawidłowe stationId' });
+    }
+  
+    try {
+      // 3) Szukamy istniejącej oceny: używamy userId i stationObjId
+      console.log(`🔍 Szukam ratingu dla user=${userId} i station=${stationObjId}`);
+      let userRating = await Rating.findOne({
+        user: userId,
+        station: stationObjId
+      });
+  
+      if (userRating) {
+        userRating.rating = rating;
+        console.log('✏️ Aktualizuję istniejącą ocenę:', userRating);
+      } else {
+        userRating = new Rating({
+          user: userId,
+          station: stationObjId,
+          rating
+        });
+        console.log('🆕 Tworzę nową ocenę:', userRating);
+      }
+  
+      // 4) Zapisujemy
+      await userRating.save();
+      console.log('✅ Ocena zapisana w bazie');
+      return res.json({ message: 'Ocena zapisana' });
+  
+    } catch (err) {
+      console.error('⚠️ Błąd w POST /ratings:', err);
+      return res.status(500).json({ error: 'Błąd zapisu oceny' });
+    }
+  });
+
+// Pobieranie średniej oceny i liczby głosów dla stacji
+app.get('/ratings', async (req, res) => {
+    const { stationId } = req.query;
+    if (!stationId) {
+      return res.status(400).json({ error: 'Brak stationId' });
+    }
+  
+    try {
+      // 1) Pobieramy wszystkie oceny tej stacji
+      const ratings = await Rating.find({ station: stationId });
+  
+      // 2) Liczymy
+      const count = ratings.length;
+      const avgRating = count === 0
+        ? 0
+        : Number((ratings.reduce((sum, r) => sum + r.rating, 0) / count).toFixed(1));
+  
+      // 3) Zwracamy JSON
+      return res.json({ avgRating, count });
+  
+    } catch (err) {
+      console.error('❌ Błąd w GET /ratings:', err);
+      return res.status(500).json({ error: 'Błąd pobierania ocen' });
+    }
+  });
+
+
 
 // Endpointy dla użytkowników
 app.post('/register', async (req, res) => {
@@ -69,7 +173,7 @@ app.post('/login', async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(403).json({ error: 'Nieprawidłowe hasło' });
 
-    const token = jwt.sign({ username: user.username, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id, username: user.username, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '1h' });
     res.json({ token });
 });
 

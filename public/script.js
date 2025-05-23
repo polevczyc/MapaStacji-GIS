@@ -262,21 +262,72 @@ async function loadStations() {
 
             // Wybór ikony na podstawie nazwy stacji
             let icon = getStationIcon(station.name);
+            
+            const popupHtml = `
+            <strong>${station.name}</strong><br>
+            ul. ${station.address}<br><br>
+            Godziny otwarcia: ${station.open} - ${station.close}<br>
+            Dostępne paliwa: ${availableFuels.join(", ") || "Brak paliw"}<br><br>
+        
+            <div class="rating-container" id="rating-container-${station._id}">
+              <span>Ocena: <strong id="avg-${station._id}">–</strong> (${station._id})</span><br>
+              <select id="select-${station._id}">
+                <option value="">Twoja ocena</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+              <button id="btn-${station._id}">Oceń</button>
+            </div>
+            `;
 
-            // Tworzenie markera
-            const marker = L.marker([station.lat, station.lng], { icon: icon })
-                .addTo(stationLayer)
-                .bindTooltip(station.name)
-                .bindPopup(`
-                    <strong>${station.name}</strong><br>
-                    ul. ${station.address}<br><br>
-                    Godziny otwarcia: ${station.open} - ${station.close}<br>
-                    Dostępne paliwa: ${availableFuels.join(", ") || "Brak paliw"}<br>
-                `, {
-                    permanent: false,
-                    direction: 'top',
-                    offset: [0, -10]
+            const marker = L.marker([station.lat, station.lng], { icon })
+            .addTo(stationLayer)
+            .bindTooltip(station.name)
+            .bindPopup(popupHtml);
+        
+          marker.on('popupopen', async () => {
+            const token = localStorage.getItem('token');
+            // 1) Pobierz średnią ocen:
+            const res = await fetch(`/ratings?stationId=${station._id}`);
+            const { avgRating, count } = await res.json();
+            document.getElementById(`avg-${station._id}`).textContent = `${avgRating} (${count})`;
+        
+            // 2) Jeśli zalogowany, pozwól ocenić:
+            if (token) {
+              const btn = document.getElementById(`btn-${station._id}`);
+              btn.addEventListener('click', async () => {
+                const sel = document.getElementById(`select-${station._id}`);
+                const rating = Number(sel.value);
+                if (!rating) return alert('Wybierz ocenę!');
+                const post = await fetch('/ratings', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: JSON.stringify({ stationId: station._id, rating })
                 });
+                if (post.ok) {
+                  alert('Dziękujemy za ocenę!');
+                  // odśwież średnią
+                  const again = await fetch(`/ratings?stationId=${station._id}`);
+                  const upd = await again.json();
+                  document.getElementById(`avg-${station._id}`).textContent = `${upd.avgRating} (${upd.count})`;
+                } else {
+                  alert('Błąd przy zapisie oceny');
+                }
+              });
+            } else {
+              // jeśli niezalogowany, ukryj select i button
+              document.getElementById(`select-${station._id}`).disabled = true;
+              document.getElementById(`btn-${station._id}`).disabled = true;
+            }
+          });
+
+
 
             enableMarkerRemoval(marker, station.lat, station.lng);
         });
