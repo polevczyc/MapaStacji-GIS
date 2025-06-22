@@ -48,16 +48,16 @@ function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) {
-      console.log('❌ Brak tokena w nagłówku');
+      console.log('Brak tokena w nagłówku');
       return res.sendStatus(401);
     }
   
     jwt.verify(token, JWT_SECRET, (err, payload) => {
       if (err) {
-        console.log('❌ JWT verify error:', err.name, err.message);
+        console.log('JWT verify error:', err.name, err.message);
         return res.sendStatus(403);
       }
-      console.log('✅ JWT payload:', payload);
+      console.log('JWT payload:', payload);
       req.user = payload;
       req.user = {
         _id: payload.id, 
@@ -76,7 +76,7 @@ app.post('/ratings', authenticateToken, async (req, res) => {
     if (!userId) {
       return res.status(401).json({ error: 'Brak uprawnień' });
     }
-    console.log('🐛 POST /ratings — req.user:', req.user);
+    console.log('POST /ratings — req.user:', req.user);
   
     const { stationId, rating } = req.body;
     if (rating < 1 || rating > 5) {
@@ -93,7 +93,7 @@ app.post('/ratings', authenticateToken, async (req, res) => {
   
     try {
       // 3) Szukamy istniejącej oceny: używamy userId i stationObjId
-      console.log(`🔍 Szukam ratingu dla user=${userId} i station=${stationObjId}`);
+      console.log(`Szukam ratingu dla user=${userId} i station=${stationObjId}`);
       let userRating = await Rating.findOne({
         user: userId,
         station: stationObjId
@@ -101,23 +101,23 @@ app.post('/ratings', authenticateToken, async (req, res) => {
   
       if (userRating) {
         userRating.rating = rating;
-        console.log('✏️ Aktualizuję istniejącą ocenę:', userRating);
+        console.log('Aktualizuję istniejącą ocenę:', userRating);
       } else {
         userRating = new Rating({
           user: userId,
           station: stationObjId,
           rating
         });
-        console.log('🆕 Tworzę nową ocenę:', userRating);
+        console.log('Tworzę nową ocenę:', userRating);
       }
   
       // 4) Zapisujemy
       await userRating.save();
-      console.log('✅ Ocena zapisana w bazie');
+      console.log('Ocena zapisana w bazie');
       return res.json({ message: 'Ocena zapisana' });
   
     } catch (err) {
-      console.error('⚠️ Błąd w POST /ratings:', err);
+      console.error('Błąd w POST /ratings:', err);
       return res.status(500).json({ error: 'Błąd zapisu oceny' });
     }
   });
@@ -143,7 +143,7 @@ app.get('/ratings', async (req, res) => {
       return res.json({ avgRating, count });
   
     } catch (err) {
-      console.error('❌ Błąd w GET /ratings:', err);
+      console.error('Błąd w GET /ratings:', err);
       return res.status(500).json({ error: 'Błąd pobierania ocen' });
     }
   });

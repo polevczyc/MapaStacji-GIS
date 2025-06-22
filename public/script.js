@@ -80,10 +80,12 @@ const circleKIcon = L.divIcon({
           '<img src="https://e7.pngegg.com/pngimages/157/520/png-clipart-circle-k-retail-convenience-shop-business-franchising-business-text-rectangle-thumbnail.png" style="width: 30px; height: 30px; object-fit: contain;" />' +
           '</div>'
 });
-
+// 
 const podZaglamiIcon = L.divIcon({
     className: 'custom-icon',
-    html: '<div style="background-color: green; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;"</div>'
+    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
+          '<img src="https://storage.googleapis.com/rc-data-search-imgs-e3f2bfb0d31a3004/img-hash-v1-bc9193c6cc399267.jpg" style="width: 30px; height: 30px; object-fit: contain;" />' +
+          '</div>'
 });
 
 // Punkty trasy
