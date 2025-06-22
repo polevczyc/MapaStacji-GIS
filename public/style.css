@@ -97,7 +97,7 @@ h1 {
     font-size: 1rem;
     font-weight: bold;
     border-radius: 6px;
-    transition: all 0.3s ease;
+    /* transition: all 0.2s ease; */
 }
 
 #adminControls {
@@ -114,7 +114,7 @@ button {
     font-weight: bold;
     border-radius: 6px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 button#calculateRoute { background-color: #007bff; color: white; }
@@ -127,13 +127,13 @@ button#setStart, button#setEnd { background-color: #28a745; color: white; }
 button#setStart:hover, button#setEnd:hover { background-color: #218838; }
 
 button#addMarker { background-color: #6c757d; color: white; }
-button#addMarker:hover { background-color: #ff9900; }
+button#addMarker:hover { border: 2px solid #ff9900; }
 
 button#removeMarker { background-color: #6c757d; color: white; }
-button#removeMarker:hover { background-color: #13b5ce; }
+button#removeMarker:hover { border: 2px solid #13b5ce; }
 
 button#logoutButton { background-color: #6c757d; color: white; border-radius: 5px; }
-button#logoutButton:hover { background-color: #5a6268; }
+button#logoutButton:hover { background-color: #8f0000; }
 
 form {
     display: flex;
@@ -227,7 +227,7 @@ h2 {
     border-radius: 5px;
     cursor: pointer;
     font-size: 1rem;
-    transition: background-color 0.3s;
+    transition: background-color 0.2s;
 }
 
 #messageBox button:hover {
@@ -266,7 +266,7 @@ h2 {
     right: 0;
     bottom: 0;
     background-color: #ccc;
-    transition: .4s;
+    transition: .2s;
     border-radius: 20px;
 }
 
@@ -278,7 +278,7 @@ h2 {
     left: 3px;
     bottom: 3px;
     background-color: white;
-    transition: .4s;
+    transition: .2s;
     border-radius: 50%;
 }
 
