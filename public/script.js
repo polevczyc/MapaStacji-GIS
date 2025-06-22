@@ -11,82 +11,47 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 const routeLayer = L.layerGroup().addTo(map);
 
 // Ikony dla markerów
+function makeDivIcon(imgUrl, size = 35) {
+  return L.divIcon({
+    className: 'custom-icon',
+    html: `
+      <div style="
+        background:#fff;
+        width:${size}px;
+        height:${size}px;
+        border-radius:25%;
+        display:flex;
+        justify-content:center;
+        align-items:center;">
+        <img src="${imgUrl}"
+             style="width:${size - 5}px; height:${size - 5}px; object-fit:contain;" />
+      </div>`
+  });
+}
+
+// mapowanie nazwa -> URL logo
+const fuelLogos = {
+  orlen : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOYwBMkqpW77rZwpZQoqd_dz3HgwzeEqJ5eQ&s',
+  shell : 'https://upload.wikimedia.org/wikipedia/en/thumb/e/e8/Shell_logo.svg/1024px-Shell_logo.svg.png',
+  bp    : 'https://www.bp.com/apps/settings/wcm/designs/refresh/bp/images/navigation/bp-logo.svg',
+  moya  : 'https://instreamgroup.com/wp-content/uploads/2020/10/moya-duze.png',
+  mol   : 'https://molpolska.pl/img/logo-mol-colorful.88751645.svg',
+  amic  : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJob7yZyCsmByf8rWXDKS2kNBM7C7MdTmNXg&s',
+  circleK: 'https://e7.pngegg.com/pngimages/157/520/png-clipart-circle-k-retail-convenience-shop-business-franchising-business-text-rectangle-thumbnail.png',
+  podZaglami: 'https://storage.googleapis.com/rc-data-search-imgs-e3f2bfb0d31a3004/img-hash-v1-bc9193c6cc399267.jpg'
+};
+
+// generowanie ikon w jednym kroku
+const icons = Object.fromEntries(
+  Object.entries(fuelLogos).map(([key, url]) => [key + 'Icon', makeDivIcon(url)])
+);
+
 const startIcon = L.icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', // Ikona startu
-    iconSize: [32, 32], // Rozmiar
-    iconAnchor: [16, 32]
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32]
 });
-
-const endIcon = L.icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', // Ikona końca
-    iconSize: [32, 32], // Rozmiar
-    iconAnchor: [16, 32]
-});
-
-// Kolorowe markery dla stacji
-
-// const  = L.divIcon({
-//     className: 'custom-icon',
-//     html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
-//           '<img src="" style="width: 30px; height: 30px; object-fit: contain;" />' +
-//           '</div>'
-// });
-
-const orlenIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
-          '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOYwBMkqpW77rZwpZQoqd_dz3HgwzeEqJ5eQ&s" style="width: 30px; height: 30px; object-fit: contain;" />' +
-          '</div>'
-});
-
-const shellIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
-          '<img src="https://upload.wikimedia.org/wikipedia/en/thumb/e/e8/Shell_logo.svg/1024px-Shell_logo.svg.png" style="width: 30px; height: 30px; object-fit: contain;" />' +
-          '</div>'
-});
-
-const bpIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
-          '<img src="https://www.bp.com/apps/settings/wcm/designs/refresh/bp/images/navigation/bp-logo.svg" style="width: 30px; height: 30px; object-fit: contain;" />' +
-          '</div>'
-});
-
-const moyaIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
-          '<img src="https://instreamgroup.com/wp-content/uploads/2020/10/moya-duze.png" style="width: 30px; height: 30px; object-fit: contain;" />' +
-          '</div>'
-});
-
-const molIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
-          '<img src="https://molpolska.pl/img/logo-mol-colorful.88751645.svg" style="width: 30px; height: 30px; object-fit: contain;" />' +
-          '</div>'
-});
-
-const amicEnergyIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
-          '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJob7yZyCsmByf8rWXDKS2kNBM7C7MdTmNXg&s" style="width: 30px; height: 30px; object-fit: contain;" />' +
-          '</div>'
-});
-
-const circleKIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
-          '<img src="https://e7.pngegg.com/pngimages/157/520/png-clipart-circle-k-retail-convenience-shop-business-franchising-business-text-rectangle-thumbnail.png" style="width: 30px; height: 30px; object-fit: contain;" />' +
-          '</div>'
-});
-// 
-const podZaglamiIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: white; width: 35px; height: 35px; border-radius: 25%; display: flex; justify-content: center; align-items: center;">' +
-          '<img src="https://storage.googleapis.com/rc-data-search-imgs-e3f2bfb0d31a3004/img-hash-v1-bc9193c6cc399267.jpg" style="width: 30px; height: 30px; object-fit: contain;" />' +
-          '</div>'
-});
+const endIcon = startIcon;
 
 // Punkty trasy
 let startPoint = null;
@@ -110,9 +75,11 @@ function handleMapClick(e) {
         endPoint = L.marker([lat, lng], { icon: endIcon, draggable: true }).addTo(map)
             .bindPopup("Punkt Końcowy")
             .openPopup();
+            activeAction = null;
     }
-    activeAction = null; // Resetuj aktywną akcję
+    updateButtonsState();
 }
+
 function decodePolyline(encoded) {
     let points = [];
     let index = 0, lat = 0, lng = 0;
@@ -142,14 +109,9 @@ function decodePolyline(encoded) {
 }
 
 async function calculateRoute() {
-    if (!startPoint || !endPoint) {
-        alert("Musisz ustawić punkt początkowy i końcowy!");
-        return;
-    }
 
     const startCoords = startPoint.getLatLng();
     const endCoords = endPoint.getLatLng();
-
     const proxyUrl = `http://localhost:3001/directions?origin=${startCoords.lat},${startCoords.lng}&destination=${endCoords.lat},${endCoords.lng}`;
 
     try {
@@ -170,14 +132,19 @@ async function calculateRoute() {
         routeLayer.clearLayers();
         L.polyline(routeCoords, { color: 'blue' }).addTo(routeLayer);
 
+        updateButtonsState();
+
     } catch (error) {
         console.error("Błąd:", error);
         alert("Błąd podczas pobierania trasy!");
     }
 }
+
 // Usuwanie trasy
 function clearRoute() {
-    routeLayer.clearLayers(); // Usuń trasę
+
+    routeLayer.clearLayers();
+
     if (startPoint) {
         map.removeLayer(startPoint);
         startPoint = null;
@@ -186,6 +153,8 @@ function clearRoute() {
         map.removeLayer(endPoint);
         endPoint = null;
     }
+    activeAction = null;
+    updateButtonsState();
 }
 
 // Obsługa przycisków
@@ -193,20 +162,30 @@ let activeAction = null;
 
 document.getElementById('setStart').addEventListener('click', () => {
     activeAction = 'start';
-    alert("Kliknij na mapie, aby ustawić punkt początkowy");
+    alert("Wybierz punkt początkowy na mapie");
 });
 
 document.getElementById('setEnd').addEventListener('click', () => {
     activeAction = 'end';
-    alert("Kliknij na mapie, aby ustawić punkt końcowy");
+    alert("Wybierz punkt końcowy na mapie");
 });
 
 document.getElementById('calculateRoute').addEventListener('click', calculateRoute);
 document.getElementById('clearRoute').addEventListener('click', clearRoute);
 
+function updateButtonsState() {
+    const calculateRouteBtn = document.getElementById('calculateRoute');
+    const clearRouteBtn = document.getElementById('clearRoute');
+
+    // Przyciski calculateRoute aktywny tylko jeśli są oba punkty
+    calculateRouteBtn.disabled = !(startPoint && endPoint);
+
+    // Przyciski clearRoute aktywny tylko jeśli istnieje trasa na mapie
+    clearRouteBtn.disabled = routeLayer.getLayers().length === 0;
+}
+
 // Dodanie obsługi kliknięć na mapie
 map.on('click', handleMapClick);
-
 
 // Definicja funkcji checkLoginStatus
 function checkLoginStatus() {
@@ -226,12 +205,12 @@ function checkLoginStatus() {
         hideUserPanel();
     }
 }
+
 // Funkcja pobierająca wybrane filtry paliwa
 function getSelectedFuels() {
     return Array.from(document.querySelectorAll('.fuelFilter:checked'))
         .map(checkbox => checkbox.value.toString()); // Konwersja na string
 }
-
 
 async function loadStations() {
     console.log("Ładowanie stacji...");
@@ -328,9 +307,6 @@ async function loadStations() {
               document.getElementById(`btn-${station._id}`).disabled = true;
             }
           });
-
-
-
             enableMarkerRemoval(marker, station.lat, station.lng);
         });
 
@@ -339,6 +315,7 @@ async function loadStations() {
         console.error(error.message);
     }
 }
+
 // Obsługa zmiany checkboxów w czasie rzeczywistym
 document.querySelectorAll('.fuelFilter').forEach(checkbox => {
     checkbox.addEventListener('change', () => {
@@ -349,18 +326,21 @@ document.querySelectorAll('.fuelFilter').forEach(checkbox => {
 
 // Funkcja zwracająca ikonę stacji
 function getStationIcon(name) {
-    switch (name) {
-        case 'Orlen': return orlenIcon;
-        case 'Shell': return shellIcon;
-        case 'BP': return bpIcon;
-        case 'MOYA': return moyaIcon;
-        case 'MOL': return molIcon;
-        case 'AMIC Energy': return amicEnergyIcon;
-        case 'Circle K': return circleKIcon;
-        case 'Pod Żaglami': return podZaglamiIcon;
-        default:
-            return L.divIcon({ className: 'custom-icon', html: '<div style="background-color: gray; width: 32px; height: 32px; border-radius: 50%;"></div>' });
-    }
+  switch (name) {
+    case 'Orlen':       return icons.orlenIcon;
+    case 'Shell':       return icons.shellIcon;
+    case 'BP':          return icons.bpIcon;
+    case 'MOYA':        return icons.moyaIcon;
+    case 'MOL':         return icons.molIcon;
+    case 'AMIC Energy': return icons.amicIcon;
+    case 'Circle K':    return icons.circleKIcon;
+    case 'Pod Żaglami': return icons.podZaglamiIcon;
+    default:
+      return L.divIcon({
+        className: 'custom-icon',
+        html: '<div style="background-color: gray; width: 32px; height: 32px; border-radius: 50%;"></div>'
+      });
+  }
 }
 
 // Funkcja, która zwraca listę dostępnych paliw
@@ -370,12 +350,25 @@ function getAvailableFuels(data) {
     if (data["95"]) availableFuels.push("95");
     if (data["98"]) availableFuels.push("98");
     if (data["100"]) availableFuels.push("100");
-    if (data["lpg"]) availableFuels.push("LPG");
-    if (data["on"]) availableFuels.push("ON");
+    if (data["LPG"]) availableFuels.push("LPG");
+    if (data["ON"]) availableFuels.push("ON");
 
     return availableFuels.length > 0 ? availableFuels.join(", ") : "Brak paliw";
 }
 
+function updateActiveButtonStyle() {
+  const addBtn    = document.getElementById('addMarker');
+  const removeBtn = document.getElementById('removeMarker');
+
+  // .toggle(className, condition) => doda gdy condition true, usunie gdy false
+  addBtn.classList.toggle   ('active-button', activeAdminAction === 'add');
+  removeBtn.classList.toggle('active-button', activeAdminAction === 'remove');
+}
+
+function setActiveAdminAction(action) {
+  activeAdminAction = action;   // 'add', 'remove' albo null
+  updateActiveButtonStyle();
+}
 
 // Obsługa kliknięcia na marker w trybie usuwania
 function enableMarkerRemoval(marker, lat, lng) {
@@ -385,7 +378,7 @@ function enableMarkerRemoval(marker, lat, lng) {
 
             const confirmDelete = confirm('Czy na pewno chcesz usunąć ten marker?');
             if (!confirmDelete) {
-                activeAdminAction = null; // Anuluj usuwanie
+                setActiveAdminAction(null);
                 return;
             }
 
@@ -404,67 +397,72 @@ function enableMarkerRemoval(marker, lat, lng) {
                 alert('Błąd podczas usuwania markera.');
             }
 
-            activeAdminAction = null; // Zresetuj akcję
+            setActiveAdminAction(null);
         }
     });
 }
 
-let activeAdminAction = null; // Przechowuje aktywną akcję admina (dodawanie/usuwanie)
-
-// Dodawanie markera
+// wciśnięto przycisk Dodaj
 document.getElementById('addMarker').addEventListener('click', () => {
-    activeAdminAction = 'add';
-    alert('Kliknij na mapie, aby dodać marker.');
+  setActiveAdminAction('add');
+  alert('Kliknij na mapie, aby dodać marker.');
+});
+
+// wciśnięto przycisk Usuń
+document.getElementById('removeMarker').addEventListener('click', () => {
+  setActiveAdminAction('remove');
+  alert('Kliknij na marker, aby usunąć marker.');
 });
 
 map.on('click', async (e) => {
     if (activeAdminAction === 'add') {
-        const { lat, lng } = e.latlng;
-
-        const description = prompt('Wprowadź opis markera:');
-        if (!description) {
-            alert('Dodawanie markera zostało anulowane.');
-            return;
-        }
-
-        // Dodaj marker na mapę
-        const marker = L.marker([lat, lng])
-            .addTo(map)
-            .bindPopup(description) // Wyświetlanie opisu po kliknięciu
-            .bindTooltip(description, { // Wyświetlanie opisu po najechaniu
-                permanent: false,
-                direction: 'top',
-                offset: [0, -10]
-            });
-
-        enableMarkerRemoval(marker, lat, lng); // Przypisz obsługę usuwania nowo dodanemu markerowi
-
-        // Wyślij dane do serwera
-        const response = await fetch('/markers', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({ lat, lng, name: description })
-        });
-
-        if (response.ok) {
-            alert('Marker został dodany.');
-        } else {
-            alert('Błąd podczas dodawania markera.');
-            map.removeLayer(marker); // Usuń marker w razie błędu
-        }
-
-        activeAdminAction = null; // Zresetuj akcję
+        await addMarkerAt(e.latlng.lat, e.latlng.lng);
     }
 });
 
-// Usuwanie markera
-document.getElementById('removeMarker').addEventListener('click', () => {
-    activeAdminAction = 'remove';
-    alert('Kliknij na marker, aby go usunąć.');
-});
+async function addMarkerAt(lat, lng) {
+    const description = prompt('Wprowadź opis markera:');
+    if (!description) {
+        alert('Dodawanie markera zostało anulowane.');
+        setActiveAdminAction(null);
+        return;
+    }
+
+    const marker = L.marker([lat, lng])
+        .addTo(map)
+        .bindPopup(description)
+        .bindTooltip(description, { permanent: false, direction: 'top', offset: [0, -10] });
+
+    enableMarkerRemoval(marker, lat, lng);
+
+    const response = await fetch('/markers', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ lat, lng, name: description })
+    });
+
+    if (response.ok) {
+        alert('Marker został dodany.');
+    } else {
+        alert('Błąd podczas dodawania markera.');
+        map.removeLayer(marker);
+    }
+
+    setActiveAdminAction(null);
+    //updateActiveButtonStyle();
+}
+
+// button highlight
+function updateActiveButtonStyle() {
+    const addBtn    = document.getElementById('addMarker');
+    const removeBtn = document.getElementById('removeMarker');
+
+    addBtn.classList.toggle   ('active-button', activeAdminAction === 'add');
+    removeBtn.classList.toggle('active-button', activeAdminAction === 'remove');
+}
 
 // Wyświetlanie panelu użytkownika
 function showUserPanel(username, isAdmin) {
@@ -520,7 +518,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
         alert('Konto zostało utworzone. Możesz się teraz zalogować.');
         document.getElementById('registerForm').reset();
     } else {
-        alert('Błąd podczas rejestracji. Sprawdź, czy nazwa użytkownika jest unikalna.');
+        alert('Błąd podczas rejestracji. Podany użytkownik już istnieje.');
     }
 });
 
@@ -533,9 +531,6 @@ document.getElementById('logoutButton').addEventListener('click', () => {
 
 // Sprawdzanie stanu logowania przy załadowaniu strony
 window.onload = checkLoginStatus;
-
-// Ładowanie markerów po załadowaniu mapy
-//loadMarkers();
 
 // Pokazuje panel użytkownika i ukrywa inne elementy
 function showMainContent() {
@@ -618,6 +613,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Strona załadowana, inicjalizuję mapę...");
     loadStations();
 });
+
 document.addEventListener("DOMContentLoaded", function () {
     const messageContainer = document.getElementById("messageContainer");
     const messageBox = document.getElementById("messageBox");
@@ -626,10 +622,22 @@ document.addEventListener("DOMContentLoaded", function () {
     const setStartButton = document.getElementById("setStart");
     const setEndButton = document.getElementById("setEnd");
 
+    /* dark mode persistance */
+    const themeSwitch = document.getElementById("themeSwitch");
+    const darkModeEnabled = localStorage.getItem("darkMode") === "true";
+
+    themeSwitch.checked = darkModeEnabled;
+    document.body.classList.toggle("dark-mode", darkModeEnabled);
+        themeSwitch.addEventListener("change", function() {
+        document.body.classList.toggle("dark-mode", this.checked);
+        localStorage.setItem("darkMode", this.checked);
+    });
+    /* dark mode persistance */
+
     function showMessage(text) {
         messageText.textContent = text;
         messageContainer.style.visibility = "visible";
-        closeButton.focus(); // Ustawienie fokusu na przycisk zamykania
+        closeButton.focus();
     }
 
     function closeMessage() {
@@ -652,4 +660,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     window.closeMessage = closeMessage;
+
+    updateButtonsState();
 });

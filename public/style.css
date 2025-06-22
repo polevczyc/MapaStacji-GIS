@@ -1,4 +1,3 @@
-/* Ogólne ustawienia dla ciała strony */
 body, html {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
@@ -9,7 +8,6 @@ body, html {
     background-color: #f4f7f6;
     flex-direction: column;
 }
-
 
 #mapContainer {
     display: flex;
@@ -36,7 +34,6 @@ body, html {
     z-index: 1000;
     overflow-y: auto;
 }
-
 
 #filters h3 {
     margin-top: 0;
@@ -65,9 +62,6 @@ body, html {
     transform: scale(1.2);
 }
 
-
-
-/* Nagłówek strony */
 h1 {
     text-align: center;
     margin-top: 20px;
@@ -76,7 +70,6 @@ h1 {
     text-transform: uppercase;
 }
 
-/* Kontenery */
 #userPanel  {
     display: flex;
     justify-content: space-between;
@@ -98,27 +91,22 @@ h1 {
     align-items: center;
 }
 
-/* Przycisków w sekcji controls i adminControls */
 #controls button, #adminControls button {
-    height: 50px; /* Ustal wysokość przycisków, np. 50px */
+    height: 50px;
     padding: 12px 24px;
     font-size: 1rem;
     font-weight: bold;
     border-radius: 6px;
-    cursor: pointer;
     transition: all 0.3s ease;
 }
 
-/* Usunięcie dodatkowego odstępu w #adminControls */
 #adminControls {
     background-color: #ccc;
     border-radius: 8px;
     align-items: center;
-    padding: 0; /* Usuń padding w #adminControls, jeśli jest dodany */
+    padding: 0;
 }
 
-
-/* Ogólny styl przycisków */
 button {
     padding: 12px 24px;
     margin: 8px;
@@ -129,7 +117,6 @@ button {
     transition: all 0.3s ease;
 }
 
-/* Typy przycisków */
 button#calculateRoute { background-color: #007bff; color: white; }
 button#calculateRoute:hover { background-color: #0056b3; }
 
@@ -139,16 +126,15 @@ button#clearRoute:hover { background-color: #c82333; }
 button#setStart, button#setEnd { background-color: #28a745; color: white; }
 button#setStart:hover, button#setEnd:hover { background-color: #218838; }
 
-button#addMarker { background-color: #ffc107; color: black; }
-button#addMarker:hover { background-color: #e0a800; }
+button#addMarker { background-color: #6c757d; color: white; }
+button#addMarker:hover { background-color: #ff9900; }
 
-button#removeMarker { background-color: #17a2b8; color: white; }
-button#removeMarker:hover { background-color: #138496; }
+button#removeMarker { background-color: #6c757d; color: white; }
+button#removeMarker:hover { background-color: #13b5ce; }
 
 button#logoutButton { background-color: #6c757d; color: white; border-radius: 5px; }
 button#logoutButton:hover { background-color: #5a6268; }
 
-/* Formularze logowania i rejestracji */
 form {
     display: flex;
     flex-direction: column;
@@ -174,14 +160,10 @@ h2 {
     margin: 10px 0;
 }
 
-
-
-/* Panel użytkownika */
 #userPanel {
     padding: 15px 20px;
 }
 
-/* Panel logowania */
 #auth {
     display: flex;
     flex-direction: column;
@@ -189,14 +171,13 @@ h2 {
     margin-top: 20px;
 }
 
-/* Stylizacja dla mediów (responsywność) */
 @media screen and (max-width: 768px) {
     #map {
-        width: 100%; /* Pełna szerokość na urządzeniach mobilnych */
-        height: 300px; /* Zmniejszenie wysokości mapy */
+        width: 100%;
+        height: 300px;
     }
     #filters {
-        position: static; /* Zmiana pozycji filtra, aby nie był na stałe na ekranie */
+        position: static;
         width: 100%;
     }
     #controls {
@@ -204,13 +185,10 @@ h2 {
     }
 }
 
-
-/* Przycisk "Wyloguj" */
 #logoutButton {
     margin-left: 10px;
 }
 
-/* Przyciemnione tło dla komunikatów */
 #messageContainer {
     position: fixed;
     top: 0;
@@ -225,7 +203,6 @@ h2 {
     visibility: hidden;
 }
 
-/* Styl dymka komunikatu */
 .messageBox {
     background-color: #fff;
     padding: 20px;
@@ -236,14 +213,12 @@ h2 {
     width: 90%;
 }
 
-/* Styl tekstu komunikatu */
 #messageText {
     font-size: 1.2rem;
     color: #333;
     margin-bottom: 15px;
 }
 
-/* Styl przycisku zamknięcia */
 #messageBox button {
     padding: 10px 20px;
     background-color: #007bff;
@@ -259,12 +234,10 @@ h2 {
     background-color: #0056b3;
 }
 
-/* Ukrycie elementu */
 .hidden {
     visibility: hidden;
 }
 
-/* Stylizacja przełącznika */
 #themeSwitchContainer {
     position: fixed;
     top: 10px;
@@ -317,7 +290,7 @@ input:checked + .slider:before {
     transform: translateX(20px);
 }
 
-/* Tryb ciemny */
+/* --dark mode settings -- */
 .dark-mode {
     background-color: #121212;
     color: #e0e0e0;
@@ -340,7 +313,6 @@ input:checked + .slider:before {
     background-color: #555;
 }
 
-/* Zmiany dla paneli w trybie ciemnym */
 .dark-mode #userPanel, .dark-mode #filters {
     background-color: #1e1e1e;
 }
@@ -363,7 +335,6 @@ input:checked + .slider:before {
     border: 1px solid #555;
 }
 
-/* Dla formularzy logowania i rejestracji w trybie ciemnym */
 .dark-mode form {
     background-color: #1e1e1e;
     box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
@@ -379,7 +350,6 @@ input:checked + .slider:before {
     color: #fff;
 }
 
-/* Zmiana wyglądu okienek alertów w trybie ciemnym */
 .dark-mode #messageContainer {
     background-color: rgba(0, 0, 0, 0.8);
 }
@@ -402,16 +372,35 @@ input:checked + .slider:before {
 .dark-mode #messageBox button:hover {
     background-color: #0056b3;
 }
+/* --dark mode settings -- */
 
 .rating-container {
     margin-top: 8px;
-  }
-  .rating-container select {
+}
+
+.rating-container select {
     padding: 4px;
     font-size: 0.9rem;
-  }
-  .rating-container button {
+}
+
+.rating-container button {
     margin-left: 4px;
     padding: 4px 8px;
     font-size: 0.9rem;
-  }
+}
+
+button:disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+    box-shadow: none;
+}
+
+#addMarker.active-button {
+  background-color: #ff9900;
+}
+
+#removeMarker.active-button {
+  background-color: #13b5ce;
+}
