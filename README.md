@@ -1,6 +1,29 @@
-﻿# PROJEKT: SYSTEMY INFORMACJI PRZESTRZENNEJ (GIS)
+﻿# PROJEKT: WYBRANE APLIKACJE SYSTEMÓW GEOINFORMACYJNYCH (WASG) - ROZBUDOWA APLIKACJI
 
 **Mapa lokalizacji stacji benzynowych w wybranym mieście w Polsce. (Gdynia)**
+
+---
+
+## ZAKRES ROZBUDOWY FUNKCJONALNOŚCI
+### 1. Rozszerzenie informacji o obiektach
+- Opis obiektu – krótka charakterystyka danej stacji
+- Słowa kluczowe – przypisywane z listy słów tematycznych (np. „LPG”, „24h”, „kawa”, „parking TIR” itp.)
+
+Nowe dane będą mogły być wykorzystywane w panelu wyszukiwania i filtrowania.
+### 2. Agregacja znaczników na mapie
+- Automatyczne grupowanie znaczników znajdujących się blisko siebie
+- Wyświetlanie jednego znacznika agregującego z liczbą zawartych w nim obiektów
+- Automatyczne rozbijanie grupy na indywidualne markery przy zbliżeniu
+### 3. Poprawa działania funkcji wyznaczania trasy
+Obecnie funkcja wyznaczania trasy działa jedynie dla nowo dodanych markerów na mapie. Planowana modyfikacja obejmuje umożliwienie wyznaczana trasy dla dowolnego istniejącego markera z bazy danych.
+### 4. System oceniania i komentarzy
+W celu zwiększenia zaangażowania użytkowników w aplikację planujemy wdrożenie:
+- Systemu oceniania stacji (np. w skali 1-5)
+- Możliwości dodawania komentarzy przez użytkowników
+- Rankingów stacji na podstawie średniej oceny
+- Panelu, w którym będzie można przeglądać i dodawać opinie
+### 5. Inne usprawnienia
+Planujemy poprawić i udoskonalić oprawę graficzną aplikacji, zwiększyć czytelność głównych elementów interfejsu i poprawienie wygody nawigowania po stronie.
 
 ---
 
