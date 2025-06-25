@@ -268,64 +268,234 @@ async function loadStations() {
             ul. ${station.address}<br><br>
             Godziny otwarcia: ${station.open} - ${station.close}<br>
             Dostępne paliwa: ${availableFuels.join(", ") || "Brak paliw"}<br><br>
-        
-            <div class="rating-container" id="rating-container-${station._id}">
-              <span>Ocena: <strong id="avg-${station._id}">–</strong> (${station._id})</span><br>
-              <select id="select-${station._id}">
-                <option value="">Twoja ocena</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-              </select>
-              <button id="btn-${station._id}">Oceń</button>
-            </div>
-            `;
+          `;
 
             const marker = L.marker([station.lat, station.lng], { icon })
             .addTo(stationLayer)
             .bindTooltip(station.name)
             .bindPopup(popupHtml);
         
-          marker.on('popupopen', async () => {
-            const token = localStorage.getItem('token');
-            // 1) Pobierz średnią ocen:
-            const res = await fetch(`/ratings?stationId=${station._id}`);
-            const { avgRating, count } = await res.json();
-            document.getElementById(`avg-${station._id}`).textContent = `${avgRating} (${count})`;
-        
-            // 2) Jeśli zalogowany, pozwól ocenić:
-            if (token) {
-              const btn = document.getElementById(`btn-${station._id}`);
-              btn.addEventListener('click', async () => {
-                const sel = document.getElementById(`select-${station._id}`);
-                const rating = Number(sel.value);
-                if (!rating) return alert('Wybierz ocenę!');
-                const post = await fetch('/ratings', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                  },
-                  body: JSON.stringify({ stationId: station._id, rating })
-                });
-                if (post.ok) {
-                  alert('Dziękujemy za ocenę!');
-                  // odśwież średnią
-                  const again = await fetch(`/ratings?stationId=${station._id}`);
-                  const upd = await again.json();
-                  document.getElementById(`avg-${station._id}`).textContent = `${upd.avgRating} (${upd.count})`;
-                } else {
-                  alert('Błąd przy zapisie oceny');
+            marker.on('popupopen', async () => {
+                
+                document.getElementById("sidePanel").classList.remove("hidden");
+                document.getElementById("ratingSection").innerHTML = `
+                <h3>${station.name}</h3>
+                <p><strong>ul. ${station.address}</strong></p>
+                <div class="rating-container" id="rating-container-${station._id}">
+                    <div><strong>Ocena użytkowników:</strong> <span id="avg-${station._id}">–</span></div>
+                    <div><strong>Ilość ocen:</strong> <span id="count-${station._id}">–</span></div>
+                    <select id="select-${station._id}">
+                    <option value="">Twoja ocena</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    </select>
+                    <button id="btn-${station._id}">Oceń</button>
+                </div>
+                `;
+
+                document.getElementById("opinionSection").innerHTML = `
+                <div id="opinion-list-${station._id}" class="opinion-list">Ładowanie opinii...</div>
+                <textarea id="opinion-input-${station._id}" maxlength="60" placeholder="Dodaj opinię (max 60 znaków)"></textarea>
+                <button id="opinion-btn-${station._id}">Wyślij</button>
+                `;
+
+                const token = localStorage.getItem('token');
+              
+                // 🔹 Pobierz ocenę
+                try {
+                  const res = await fetch(`/ratings?stationId=${station._id}`);
+                  const { avgRating, count } = await res.json();
+                  document.getElementById(`avg-${station._id}`).textContent = avgRating;
+                  document.getElementById(`count-${station._id}`).textContent = count;
+                } catch (err) {
+                  console.error("Błąd przy pobieraniu oceny:", err);
+                  document.getElementById(`avg-${station._id}`).textContent = `–`;
                 }
+              
+                const btn = document.getElementById(`btn-${station._id}`);
+                const sel = document.getElementById(`select-${station._id}`);
+              
+                if (token) {
+                  btn.disabled = false;
+                  sel.disabled = false;
+              
+                  btn.addEventListener('click', async () => {
+                    const rating = Number(sel.value);
+                    if (!rating) return alert('Wybierz ocenę!');
+              
+                    const post = await fetch('/ratings', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({ stationId: station._id, rating })
+                    });
+              
+                    if (post.ok) {
+                        alert('Dziękujemy za ocenę!');
+                        const again = await fetch(`/ratings?stationId=${station._id}`);
+                        const upd = await again.json();
+                        document.getElementById(`avg-${station._id}`).textContent = upd.avgRating;
+                        document.getElementById(`count-${station._id}`).textContent = upd.count;
+                      } else {
+                        alert('Błąd przy zapisie oceny');
+                      }
+                  });
+                } else {
+                  btn.disabled = true;
+                  sel.disabled = true;
+                }
+              
+                // 🔹 Opinie – pobieranie i wyświetlanie
+                const listDiv = document.getElementById(`opinion-list-${station._id}`);
+                const opinionBtn = document.getElementById(`opinion-btn-${station._id}`);
+                const opinionInput = document.getElementById(`opinion-input-${station._id}`);
+              
+                const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
+                const currentUserId = payload?.id;
+                const isAdmin = payload?.isAdmin;
+
+                // ⭐ Obsługa gwiazdek
+                const starContainer = document.getElementById(`stars-${station._id}`);
+                if (starContainer) {
+                const stars = starContainer.querySelectorAll('.star');
+                stars.forEach(star => {
+                    star.addEventListener('click', async () => {
+                    const rating = Number(star.dataset.value);
+                    if (!rating || !token) return;
+
+                    const resp = await fetch('/ratings', {
+                        method: 'POST',
+                        headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ stationId: station._id, rating })
+                    });
+
+                    if (resp.ok) {
+                        alert('Dziękujemy za ocenę!');
+                        // Podświetl kliknięte gwiazdki
+                        stars.forEach(s => {
+                        s.textContent = s.dataset.value <= rating ? '★' : '☆';
+                        });
+
+                        const again = await fetch(`/ratings?stationId=${station._id}`);
+                        const upd = await again.json();
+                        document.getElementById(`avg-${station._id}`).textContent = upd.avgRating;
+                        document.getElementById(`count-${station._id}`).textContent = upd.count;
+                    } else {
+                        alert('Błąd przy zapisie oceny');
+                    }
+                    });
+                });
+                }
+
+              
+                try {
+                  const res = await fetch(`/opinions?stationId=${station._id}`);
+                  const opinions = await res.json();
+              
+                  listDiv.innerHTML = opinions.length
+                    ? opinions.map(o => {
+                        const canDelete = isAdmin || (o.user._id === currentUserId);
+                        return `
+                        <div class="opinion-item">
+                          <span class="opinion-user"><strong>${o.user.username}:</strong></span>
+                          <span class="opinion-text">${o.text}</span>
+                          ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
+                        </div>
+                      `;
+                      }).join('')
+                    : 'Brak opinii.';
+                } catch {
+                  listDiv.innerHTML = 'Błąd wczytywania opinii';
+                }
+              
+                // 🔹 Dodawanie opinii
+                if (token) {
+                  opinionBtn.disabled = false;
+                  opinionInput.disabled = false;
+              
+                  opinionBtn.addEventListener('click', async () => {
+                    const text = opinionInput.value.trim();
+                    if (!text) return alert('Opinia nie może być pusta');
+                    if (text.length > 60) return alert('Opinia za długa (max 60 znaków)');
+              
+                    const resp = await fetch('/opinions', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({ stationId: station._id, text })
+                    });
+              
+                    if (resp.ok) {
+                      alert('Dziękujemy za opinię!');
+                      opinionInput.value = '';
+                      const refreshed = await fetch(`/opinions?stationId=${station._id}`);
+                      const data = await refreshed.json();
+                      listDiv.innerHTML = data.map(o => {
+                        const canDelete = isAdmin || (o.user._id === currentUserId);
+                        return `
+                          <div>
+                            <strong>${o.user.username}:</strong> ${o.text}
+                            ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
+                          </div>
+                        `;
+                      }).join('');
+                      // Re-aktywuj eventy po odświeżeniu
+                      attachDeleteHandlers();
+                    } else {
+                      alert('Błąd przy zapisie opinii');
+                    }
+                  });
+                } else {
+                  opinionBtn.disabled = true;
+                  opinionInput.disabled = true;
+                }
+              
+                // 🔹 Usuwanie opinii – przypisanie eventów
+                function attachDeleteHandlers() {
+                  document.querySelectorAll(`#opinion-list-${station._id} .delete-opinion`).forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                      const id = btn.dataset.id;
+                      const confirmDelete = confirm("Czy na pewno chcesz usunąć tę opinię?");
+                      if (!confirmDelete) return;
+              
+                      const resp = await fetch(`/opinions/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      });
+              
+                      if (resp.ok) {
+                        alert("Opinia usunięta");
+                        const refreshed = await fetch(`/opinions?stationId=${station._id}`);
+                        const data = await refreshed.json();
+                        listDiv.innerHTML = data.map(o => {
+                          const canDelete = isAdmin || (o.user._id === currentUserId);
+                          return `
+                            <div>
+                              <strong>${o.user.username}:</strong> ${o.text}
+                              ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
+                            </div>
+                          `;
+                        }).join('');
+                        attachDeleteHandlers(); // 🔁 Ponownie przypisz eventy
+                      } else {
+                        alert("Nie udało się usunąć opinii");
+                      }
+                    });
+                  });
+                }
+              
+                attachDeleteHandlers();
               });
-            } else {
-              // jeśli niezalogowany, ukryj select i button
-              document.getElementById(`select-${station._id}`).disabled = true;
-              document.getElementById(`btn-${station._id}`).disabled = true;
-            }
-          });
 
 
 
@@ -333,9 +503,11 @@ async function loadStations() {
         });
 
         console.log("Ładowanie stacji zakończone.");
+
     } catch (error) {
         console.error(error.message);
     }
+
 }
 // Obsługa zmiany checkboxów w czasie rzeczywistym
 document.querySelectorAll('.fuelFilter').forEach(checkbox => {
@@ -457,6 +629,9 @@ map.on('click', async (e) => {
         activeAdminAction = null; // Zresetuj akcję
     }
 });
+map.on('popupclose', () => {
+    document.getElementById("sidePanel").classList.add("hidden");
+});
 
 // Usuwanie markera
 document.getElementById('removeMarker').addEventListener('click', () => {
@@ -574,6 +749,31 @@ function checkLoginStatus() {
         toggleFilters(false); // Ukryj filtry
     }
 }
+
+document.getElementById("showTopStations").addEventListener("click", async () => {
+    try {
+      const res = await fetch("/top-stations");
+      const topStations = await res.json();
+  
+      const list = document.getElementById("top3List");
+      list.innerHTML = "";
+  
+      topStations.forEach(station => {
+        const li = document.createElement("li");
+        li.textContent = `${station.rank}. ${station.name} ul.${station.address} – ${station.rating} (${station.count} ocen)`;
+        list.appendChild(li);
+      });
+  
+      document.getElementById("top3Modal").classList.remove("hidden");
+    } catch (err) {
+      alert("Błąd ładowania rankingu.");
+    }
+  });
+  
+  function closeTop3() {
+    document.getElementById("top3Modal").classList.add("hidden");
+  }
+
 
 // Funkcja do wyświetlania komunikatu
 function showMessage(message) {

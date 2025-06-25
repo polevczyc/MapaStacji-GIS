@@ -22,7 +22,8 @@ mongoose.connect('mongodb://localhost:27017/markersDB', { useNewUrlParser: true,
 const markerSchema = new mongoose.Schema({
     lat: Number,
     lng: Number,
-    name: String
+    name: String,
+    address: String
 });
 const Marker = mongoose.model('Marker', markerSchema);
 
@@ -42,6 +43,17 @@ const ratingSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Rating = mongoose.model('Rating', ratingSchema);
+
+//Schemat i model Oceny pisemnej
+const opinionSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  station: { type: mongoose.Schema.Types.ObjectId, ref: 'Marker', required: true },
+  text: { type: String, required: true, maxlength: 60 }
+}, { timestamps: true });
+
+const Opinion = mongoose.model('Opinion', opinionSchema);
+
+
 
 // Middleware do weryfikacji tokena JWT
 function authenticateToken(req, res, next) {
@@ -148,6 +160,81 @@ app.get('/ratings', async (req, res) => {
     }
   });
 
+  // Dodawanie opinii
+app.post('/opinions', authenticateToken, async (req, res) => {
+  const { stationId, text } = req.body;
+  const userId = req.user._id;
+
+  if (!text || text.length > 60) {
+    return res.status(400).json({ error: 'Opinia musi mieć maksymalnie 60 znaków' });
+  }
+
+  try {
+    const opinion = new Opinion({ user: userId, station: stationId, text });
+    await opinion.save();
+    res.status(201).json({ message: 'Opinia dodana' });
+  } catch (err) {
+    res.status(500).json({ error: 'Błąd podczas zapisywania opinii' });
+  }
+});
+
+// Pobieranie opinii dla danej stacji
+app.get('/opinions', async (req, res) => {
+  const { stationId } = req.query;
+  try {
+    const opinions = await Opinion.find({ station: stationId }).populate('user', 'username').sort({ createdAt: -1 });
+    res.json(opinions);
+  } catch (err) {
+    res.status(500).json({ error: 'Błąd podczas pobierania opinii' });
+  }
+});
+
+// Usuwanie opinii
+app.delete('/opinions/:id', authenticateToken, async (req, res) => {
+  const opinionId = req.params.id;
+
+  try {
+    const opinion = await Opinion.findById(opinionId);
+    if (!opinion) return res.status(404).json({ error: 'Opinia nie istnieje' });
+
+    const userId = req.user._id;
+    const isAdmin = req.user.isAdmin;
+
+    // Sprawdź, czy użytkownik jest właścicielem opinii lub adminem
+    if (!isAdmin && opinion.user.toString() !== userId) {
+      return res.status(403).json({ error: 'Brak uprawnień do usunięcia tej opinii' });
+    }
+
+    await opinion.deleteOne();
+    res.json({ message: 'Opinia usunięta' });
+  } catch (err) {
+    res.status(500).json({ error: 'Błąd przy usuwaniu opinii' });
+  }
+});
+
+// TOP3 STACJE
+app.get('/top-stations', async (req, res) => {
+  try {
+    const ratings = await Rating.aggregate([
+      { $group: { _id: "$station", avgRating: { $avg: "$rating" }, count: { $sum: 1 } } },
+      { $sort: { avgRating: -1, count: -1 } },
+      { $limit: 3 }
+    ]);
+
+    const populated = await Marker.populate(ratings, { path: "_id" });
+    const result = populated.map((entry, index) => ({
+      rank: index + 1,
+      name: entry._id.name,
+      address: entry._id.address,
+      rating: entry.avgRating.toFixed(1),
+      count: entry.count
+    }));
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: "Błąd pobierania TOP3 stacji" });
+  }
+});
 
 
 // Endpointy dla użytkowników

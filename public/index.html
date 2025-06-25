@@ -27,6 +27,7 @@
         <button id="logoutButton">Wyloguj</button>
     </div>
     <div id="controls">
+        <button id="showTopStations">TOP3 STACJE</button>
         <button id="setStart">Ustaw punkt początkowy</button>
         <button id="setEnd">Ustaw punkt końcowy</button>
         <button id="calculateRoute">Wyznacz Trasę</button>
@@ -52,7 +53,11 @@
     </div>   
     <div id="mapContainer">
         <div id="map"></div>
-        <div id="filters">
+        <div id="sidePanel" class="hidden">
+            <div id="ratingSection"></div>
+            <div id="opinionSection"></div>
+          </div>
+        <div id="filters" class="hidden">
             <h3>Oferowane paliwa</h3>
             <label><input type="checkbox" class="fuelFilter" value="95" checked> 95</label>
             <label><input type="checkbox" class="fuelFilter" value="98" checked> 98</label>
@@ -60,7 +65,15 @@
             <label><input type="checkbox" class="fuelFilter" value="on" checked> ON</label>
             <label><input type="checkbox" class="fuelFilter" value="lpg" checked> LPG</label>
         </div>
+
     </div>
+    <div id="top3Modal" class="hidden">
+        <div class="messageBox">
+          <h3>🏆 Najlepsze stacje</h3>
+          <ul id="top3List"></ul>
+          <button onclick="closeTop3()">Zamknij</button>
+        </div>
+      </div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="script.js"></script>
 </body>

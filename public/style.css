@@ -130,6 +130,7 @@ button {
 }
 
 /* Typy przycisków */
+
 button#calculateRoute { background-color: #007bff; color: white; }
 button#calculateRoute:hover { background-color: #0056b3; }
 
@@ -147,6 +148,8 @@ button#removeMarker:hover { background-color: #138496; }
 
 button#logoutButton { background-color: #6c757d; color: white; border-radius: 5px; }
 button#logoutButton:hover { background-color: #5a6268; }
+button#showTopStations {background-color: #ffc107;color: black;}
+button#showTopStations:hover {background-color: #e0a800;}
 
 /* Formularze logowania i rejestracji */
 form {
@@ -262,6 +265,10 @@ h2 {
 /* Ukrycie elementu */
 .hidden {
     visibility: hidden;
+}
+
+.hidden2 {
+    display: none;
 }
 
 /* Stylizacja przełącznika */
@@ -415,3 +422,142 @@ input:checked + .slider:before {
     padding: 4px 8px;
     font-size: 0.9rem;
   }
+
+  .opinion-section {
+    margin-top: 10px;
+  }
+  
+  #sidePanel {
+    width: 20%;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-left: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: 65vh;
+    overflow-y: auto;
+  }
+  
+  .dark-mode #sidePanel {
+    background-color: #1e1e1e;
+    color: white;
+  }
+
+  .opinion-section textarea {
+    width: 100%;
+    height: 70px;
+    padding: 8px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    resize: none; /* 🚫 wyłącza ręczne rozciąganie */
+}
+textarea[id^="opinion-input-"] {
+    width: 100% !important;
+    height: 50px;
+    box-sizing: border-box;
+    resize: none;
+}  
+
+  .opinion-section button {
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+  }
+  .opinion-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    margin: 2px 0;
+    padding: 0;
+    line-height: 1;
+  }
+  
+  .opinion-user {
+    white-space: nowrap;
+  }
+  
+  .opinion-text {
+    overflow: hidden;
+    padding-bottom: 3px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    flex: 1;
+  }
+  
+  .delete-opinion {
+    padding: 0;
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1;
+  }
+
+
+  .opinion-list {
+    max-height: 150px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    
+  }
+
+
+
+  .delete-opinion {
+    background: none;
+    border: none;
+    color: red;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-left: 5px;
+  }
+  .rating-container div {
+    margin-bottom: 4px;
+    font-size: 0.95rem;
+  }
+
+  .stars {
+    font-size: 1.4rem;
+    color: #f0ad4e;
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .stars .star {
+    display: inline-block;
+    padding: 0 2px;
+    transition: transform 0.2s;
+  }
+  
+  .stars .star:hover {
+    transform: scale(1.2);
+  }
+
+  #top3Modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+  
+  #top3Modal ul {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+  }
+  
+  #top3Modal li {
+    margin: 10px 0;
+    font-size: 1.1rem;
+  }
+  
