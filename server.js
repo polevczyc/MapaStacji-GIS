@@ -2,8 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 
-const API_KEY = require("./api_key.js");
-
+//import API_KEY from "./api_key.js";
+API_KEY = "AIzaSyCZykhXWPV28-JrQpTmwWkDKqL7IHzegck"; 
 const app = express();
 app.use(cors());
 

@@ -8,25 +8,29 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="themeSwitchContainer">
-        dark mode
-        <label class="switch">
-            <input type="checkbox" id="themeSwitch">
-            <span class="slider round"></span>
-        </label>
-    </div>
+
     <div id="messageContainer" class="hidden">
         <div id="messageBox" class="messageBox">
             <p id="messageText"></p>
             <button onclick="closeMessage()">Zamknij</button>
         </div>
     </div>    
-    <h1>Mapa Stacji Benzynowych</h1>
-    <div id="userPanel" style="display: none;">
-        <span id="userInfo"></span>
-        <button id="logoutButton">Wyloguj</button>
-    </div>
+    <div id="pageHeader">
+        <div id="themeSwitchContainer">
+            dark mode
+            <label class="switch">
+                <input type="checkbox" id="themeSwitch">
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <h1>MAPA STACJI BENZYNOWYCH</h1>
+        <div id="userPanel" style="display: none;">
+          <span id="userInfo"></span>
+          <button id="logoutButton">Wyloguj</button>
+        </div>
+      </div>
     <div id="controls">
+        <button id="showTopStations">TOP3 STACJE</button>
         <button id="setStart">Ustaw punkt początkowy</button>
         <button id="setEnd">Ustaw punkt końcowy</button>
         <button id="calculateRoute">Wyznacz Trasę</button>
@@ -50,17 +54,26 @@
             <button type="submit">Zarejestruj</button>
         </form>
     </div>   
-    <div id="mapContainer">
+    <div id="mapContainer" class="hidden">
         <div id="map"></div>
-        <div id="filters">
-            <h3>Oferowane paliwa</h3>
-            <label><input type="checkbox" class="fuelFilter" value="95" checked> 95</label>
-            <label><input type="checkbox" class="fuelFilter" value="98" checked> 98</label>
-            <label><input type="checkbox" class="fuelFilter" value="100" checked> 100</label>
-            <label><input type="checkbox" class="fuelFilter" value="on" checked> ON</label>
-            <label><input type="checkbox" class="fuelFilter" value="lpg" checked> LPG</label>
+        <div id="sidePanel" class="hidden">
+            <div id="ratingSection"></div>
+            <div id="opinionSection"></div>
         </div>
+        <div id="searchPanel">
+            <h3>Szukaj stacji</h3>
+            <input type="text" id="keywordInput" placeholder="Np. bar, myjnia, sklep..." />
+            <div id="searchResults"></div>
+        </div>
+
     </div>
+    <div id="top3Modal" class="hidden">
+        <div class="messageBox">
+          <h3>🏆 Najlepsze stacje</h3>
+          <ul id="top3List"></ul>
+          <button onclick="closeTop3()">Zamknij</button>
+        </div>
+      </div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="script.js"></script>
 </body>
