@@ -224,298 +224,501 @@ function checkLoginStatus() {
         hideUserPanel();
     }
 }
-// Funkcja pobierająca wybrane filtry paliwa
-function getSelectedFuels() {
-    return Array.from(document.querySelectorAll('.fuelFilter:checked'))
-        .map(checkbox => checkbox.value.toString()); // Konwersja na string
-}
 
-
+/*
 async function loadStations() {
     console.log("Ładowanie stacji...");
 
-    const selectedFuels = getSelectedFuels();
-    console.log("Wybrane paliwa:", selectedFuels);
-
-    stationLayer.clearLayers(); // Czyszczenie warstwy stacji
+    const keyword = document.getElementById("keywordInput")?.value?.trim().toLowerCase();
+    stationLayer.clearLayers();
 
     try {
-        const response = await fetch('/markers'); // Pobieranie danych stacji z serwera
+        const response = await fetch('/markers');
+        if (!response.ok) throw new Error('Błąd podczas ładowania stacji');
+
+        const stations = await response.json();
+        console.log("Pobrane stacje:", stations);
+
+        const excluded = ["_id", "lat", "lng", "__v", "address", "close", "open"];
+        const keywords = keyword ? keyword.split(' ').map(k => k.trim().toLowerCase()) : [];
+        
+
+        filtered.forEach(station => {
+            const availableFuels = Object.keys(station)
+            .filter(key => station[key] === true)
+            .map(fuel => fuel.toString());
+    
+        let icon = getStationIcon(station.name);
+    
+        const popupHtml = `
+            <strong>${station.name}</strong><br>
+            ul. ${station.address}<br><br>
+        `;
+    
+        const marker = L.marker([station.lat, station.lng], { icon })
+            .addTo(stationLayer)
+            .bindTooltip(station.name)
+            .bindPopup(popupHtml);
+
+            marker.on('popupopen', async () => {
+                document.getElementById("sidePanel").classList.remove("hidden");
+                document.getElementById("ratingSection").innerHTML = `
+                    <h3>${station.name}</h3>
+                    <p><strong>ul. ${station.address}</strong></p>
+                    Godziny otwarcia:<br> ${station.open} - ${station.close}<br>
+                    Dostępne paliwa oraz usługi:<br> ${availableFuels.join(", ") || "Brak paliw"}<br><br>
+                    <div class="rating-container" id="rating-container-${station._id}">
+                        <div><strong>Ocena użytkowników:</strong> <span id="avg-${station._id}">–</span></div>
+                        <div><strong>Ilość ocen:</strong> <span id="count-${station._id}">–</span></div>
+                        <select id="select-${station._id}">
+                        <option value="">Twoja ocena</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        </select>
+                        <button id="btn-${station._id}">Oceń</button>
+                    </div>
+                `;
+
+                document.getElementById("opinionSection").innerHTML = `
+                    <div id="opinion-list-${station._id}" class="opinion-list">Ładowanie opinii...</div>
+                    <textarea id="opinion-input-${station._id}" maxlength="60" placeholder="Dodaj opinię (max 60 znaków)"></textarea>
+                    <button id="opinion-btn-${station._id}">Wyślij</button>
+                `;
+
+                const token = localStorage.getItem('token');
+                try {
+                    const res = await fetch(`/ratings?stationId=${station._id}`);
+                    const { avgRating, count } = await res.json();
+                    document.getElementById(`avg-${station._id}`).textContent = avgRating;
+                    document.getElementById(`count-${station._id}`).textContent = count;
+                } catch (err) {
+                    console.error("Błąd przy pobieraniu oceny:", err);
+                    document.getElementById(`avg-${station._id}`).textContent = `–`;
+                }
+
+                const btn = document.getElementById(`btn-${station._id}`);
+                const sel = document.getElementById(`select-${station._id}`);
+
+                if (token) {
+                    btn.disabled = false;
+                    sel.disabled = false;
+
+                    btn.addEventListener('click', async () => {
+                        const rating = Number(sel.value);
+                        if (!rating) return alert('Wybierz ocenę!');
+
+                        const post = await fetch('/ratings', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ stationId: station._id, rating })
+                        });
+
+                        if (post.ok) {
+                            alert('Dziękujemy za ocenę!');
+                            const again = await fetch(`/ratings?stationId=${station._id}`);
+                            const upd = await again.json();
+                            document.getElementById(`avg-${station._id}`).textContent = upd.avgRating;
+                            document.getElementById(`count-${station._id}`).textContent = upd.count;
+                        } else {
+                            alert('Błąd przy zapisie oceny');
+                        }
+                    });
+                } else {
+                    btn.disabled = true;
+                    sel.disabled = true;
+                }
+
+                const listDiv = document.getElementById(`opinion-list-${station._id}`);
+                const opinionBtn = document.getElementById(`opinion-btn-${station._id}`);
+                const opinionInput = document.getElementById(`opinion-input-${station._id}`);
+
+                const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
+                const currentUserId = payload?.id;
+                const isAdmin = payload?.isAdmin;
+
+                try {
+                    const res = await fetch(`/opinions?stationId=${station._id}`);
+                    const opinions = await res.json();
+
+                    listDiv.innerHTML = opinions.length
+                        ? opinions.map(o => {
+                            const canDelete = isAdmin || (o.user._id === currentUserId);
+                            return `
+                                <div class="opinion-item">
+                                    <span class="opinion-user"><strong>${o.user.username}:</strong></span>
+                                    <span class="opinion-text">${o.text}</span>
+                                    ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
+                                </div>
+                            `;
+                        }).join('')
+                        : 'Brak opinii.';
+                } catch {
+                    listDiv.innerHTML = 'Błąd wczytywania opinii';
+                }
+
+                if (token) {
+                    opinionBtn.disabled = false;
+                    opinionInput.disabled = false;
+
+                    opinionBtn.addEventListener('click', async () => {
+                        const text = opinionInput.value.trim();
+                        if (!text) return alert('Opinia nie może być pusta');
+                        if (text.length > 60) return alert('Opinia za długa (max 60 znaków)');
+
+                        const resp = await fetch('/opinions', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ stationId: station._id, text })
+                        });
+
+                        if (resp.ok) {
+                            alert('Dziękujemy za opinię!');
+                            opinionInput.value = '';
+                            const refreshed = await fetch(`/opinions?stationId=${station._id}`);
+                            const data = await refreshed.json();
+                            listDiv.innerHTML = data.map(o => {
+                                const canDelete = isAdmin || (o.user._id === currentUserId);
+                                return `
+                                    <div class="opinion-item">
+                                        <span class="opinion-user"><strong>${o.user.username}:</strong></span>
+                                        <span class="opinion-text">${o.text}</span>
+                                        ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
+                                    </div>
+                                `;
+                            }).join('');
+                            attachDeleteHandlers();
+                        } else {
+                            alert('Błąd przy zapisie opinii');
+                        }
+                    });
+                } else {
+                    opinionBtn.disabled = true;
+                    opinionInput.disabled = true;
+                }
+
+                function attachDeleteHandlers() {
+                    document.querySelectorAll(`#opinion-list-${station._id} .delete-opinion`).forEach(btn => {
+                        btn.addEventListener('click', async () => {
+                            const id = btn.dataset.id;
+                            const confirmDelete = confirm("Czy na pewno chcesz usunąć tę opinię?");
+                            if (!confirmDelete) return;
+
+                            const resp = await fetch(`/opinions/${id}`, {
+                                method: 'DELETE',
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+
+                            if (resp.ok) {
+                                alert("Opinia usunięta");
+                                const refreshed = await fetch(`/opinions?stationId=${station._id}`);
+                                const data = await refreshed.json();
+                                listDiv.innerHTML = data.map(o => {
+                                    const canDelete = isAdmin || (o.user._id === currentUserId);
+                                    return `
+                                        <div class="opinion-item">
+                                            <span class="opinion-user"><strong>${o.user.username}:</strong></span>
+                                            <span class="opinion-text">${o.text}</span>
+                                            ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
+                                        </div>
+                                    `;
+                                }).join('');
+                                attachDeleteHandlers();
+                            } else {
+                                alert("Nie udało się usunąć opinii");
+                            }
+                        });
+                    });
+                }
+
+                attachDeleteHandlers();
+            });
+
+            enableMarkerRemoval(marker, station.lat, station.lng);
+        });
+
+        console.log("Ładowanie stacji zakończone.");
+        renderSearchResults(stations, document.getElementById("keywordInput").value);
+
+    } catch (error) {
+        console.error(error.message);
+    }
+}
+*/
+
+async function loadStations() {
+    console.log("Ładowanie stacji...");
+    stationLayer.clearLayers();
+
+    try {
+        const response = await fetch('/markers');
         if (!response.ok) throw new Error('Błąd podczas ładowania stacji');
 
         const stations = await response.json();
         console.log("Pobrane stacje:", stations);
 
         stations.forEach(station => {
-            // Konwersja dostępnych paliw do tablicy (np. ["95", "ON"])
             const availableFuels = Object.keys(station)
                 .filter(key => station[key] === true)
-                .map(fuel => fuel.toString()); // Konwersja na stringi dla zgodności
+                .map(fuel => fuel.toString());
 
-            console.log(`Stacja: ${station.name}, Dostępne paliwa:`, availableFuels);
-
-            // Sprawdzenie czy stacja zawiera wybrane paliwa
-            if (!selectedFuels.some(fuel => availableFuels.includes(fuel))) {
-                console.log(`Pomijam stację: ${station.name} - nie zawiera wybranego paliwa`);
-                return;
-            }
-
-            // Wybór ikony na podstawie nazwy stacji
-            let icon = getStationIcon(station.name);
-            
+            const icon = getStationIcon(station.name);
             const popupHtml = `
-            <strong>${station.name}</strong><br>
-            ul. ${station.address}<br><br>
-            Godziny otwarcia: ${station.open} - ${station.close}<br>
-            Dostępne paliwa: ${availableFuels.join(", ") || "Brak paliw"}<br><br>
-          `;
+                <strong>${station.name}</strong><br>
+                ul. ${station.address}<br><br>
+            `;
 
             const marker = L.marker([station.lat, station.lng], { icon })
-            .addTo(stationLayer)
-            .bindTooltip(station.name)
-            .bindPopup(popupHtml);
-        
+                .addTo(stationLayer)
+                .bindTooltip(station.name)
+                .bindPopup(popupHtml);
+
             marker.on('popupopen', async () => {
-                
                 document.getElementById("sidePanel").classList.remove("hidden");
+
                 document.getElementById("ratingSection").innerHTML = `
-                <h3>${station.name}</h3>
-                <p><strong>ul. ${station.address}</strong></p>
-                <div class="rating-container" id="rating-container-${station._id}">
-                    <div><strong>Ocena użytkowników:</strong> <span id="avg-${station._id}">–</span></div>
-                    <div><strong>Ilość ocen:</strong> <span id="count-${station._id}">–</span></div>
-                    <select id="select-${station._id}">
-                    <option value="">Twoja ocena</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    </select>
-                    <button id="btn-${station._id}">Oceń</button>
-                </div>
+                    <h3>${station.name}</h3>
+                    <p><strong>ul. ${station.address}</strong></p>
+                    Godziny otwarcia:<br> ${station.open} - ${station.close}<br>
+                    Dostępne paliwa i usługi:<br> ${availableFuels.join(", ") || "Brak paliw"}<br><br>
+                    <div class="rating-container" id="rating-container-${station._id}">
+                        <div><strong>Ocena użytkowników:</strong> <span id="avg-${station._id}">–</span></div>
+                        <div><strong>Ilość ocen:</strong> <span id="count-${station._id}">–</span></div>
+                        <select id="select-${station._id}">
+                            <option value="">Twoja ocena</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                        <button id="btn-${station._id}">Oceń</button>
+                    </div>
                 `;
 
                 document.getElementById("opinionSection").innerHTML = `
-                <div id="opinion-list-${station._id}" class="opinion-list">Ładowanie opinii...</div>
-                <textarea id="opinion-input-${station._id}" maxlength="60" placeholder="Dodaj opinię (max 60 znaków)"></textarea>
-                <button id="opinion-btn-${station._id}">Wyślij</button>
+                    <div id="opinion-list-${station._id}" class="opinion-list">Ładowanie opinii...</div>
+                    <textarea id="opinion-input-${station._id}" maxlength="60" placeholder="Dodaj opinię (max 60 znaków)"></textarea>
+                    <button id="opinion-btn-${station._id}">Wyślij</button>
                 `;
 
                 const token = localStorage.getItem('token');
-              
-                // 🔹 Pobierz ocenę
-                try {
-                  const res = await fetch(`/ratings?stationId=${station._id}`);
-                  const { avgRating, count } = await res.json();
-                  document.getElementById(`avg-${station._id}`).textContent = avgRating;
-                  document.getElementById(`count-${station._id}`).textContent = count;
-                } catch (err) {
-                  console.error("Błąd przy pobieraniu oceny:", err);
-                  document.getElementById(`avg-${station._id}`).textContent = `–`;
-                }
-              
-                const btn = document.getElementById(`btn-${station._id}`);
-                const sel = document.getElementById(`select-${station._id}`);
-              
-                if (token) {
-                  btn.disabled = false;
-                  sel.disabled = false;
-              
-                  btn.addEventListener('click', async () => {
-                    const rating = Number(sel.value);
-                    if (!rating) return alert('Wybierz ocenę!');
-              
-                    const post = await fetch('/ratings', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                      },
-                      body: JSON.stringify({ stationId: station._id, rating })
-                    });
-              
-                    if (post.ok) {
-                        alert('Dziękujemy za ocenę!');
-                        const again = await fetch(`/ratings?stationId=${station._id}`);
-                        const upd = await again.json();
-                        document.getElementById(`avg-${station._id}`).textContent = upd.avgRating;
-                        document.getElementById(`count-${station._id}`).textContent = upd.count;
-                      } else {
-                        alert('Błąd przy zapisie oceny');
-                      }
-                  });
-                } else {
-                  btn.disabled = true;
-                  sel.disabled = true;
-                }
-              
-                // 🔹 Opinie – pobieranie i wyświetlanie
-                const listDiv = document.getElementById(`opinion-list-${station._id}`);
-                const opinionBtn = document.getElementById(`opinion-btn-${station._id}`);
-                const opinionInput = document.getElementById(`opinion-input-${station._id}`);
-              
                 const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
                 const currentUserId = payload?.id;
                 const isAdmin = payload?.isAdmin;
 
-                // ⭐ Obsługa gwiazdek
-                const starContainer = document.getElementById(`stars-${station._id}`);
-                if (starContainer) {
-                const stars = starContainer.querySelectorAll('.star');
-                stars.forEach(star => {
-                    star.addEventListener('click', async () => {
-                    const rating = Number(star.dataset.value);
-                    if (!rating || !token) return;
-
-                    const resp = await fetch('/ratings', {
-                        method: 'POST',
-                        headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({ stationId: station._id, rating })
-                    });
-
-                    if (resp.ok) {
-                        alert('Dziękujemy za ocenę!');
-                        // Podświetl kliknięte gwiazdki
-                        stars.forEach(s => {
-                        s.textContent = s.dataset.value <= rating ? '★' : '☆';
-                        });
-
-                        const again = await fetch(`/ratings?stationId=${station._id}`);
-                        const upd = await again.json();
-                        document.getElementById(`avg-${station._id}`).textContent = upd.avgRating;
-                        document.getElementById(`count-${station._id}`).textContent = upd.count;
-                    } else {
-                        alert('Błąd przy zapisie oceny');
-                    }
-                    });
-                });
-                }
-
-              
                 try {
-                  const res = await fetch(`/opinions?stationId=${station._id}`);
-                  const opinions = await res.json();
-              
-                  listDiv.innerHTML = opinions.length
-                    ? opinions.map(o => {
-                        const canDelete = isAdmin || (o.user._id === currentUserId);
-                        return `
-                        <div class="opinion-item">
-                          <span class="opinion-user"><strong>${o.user.username}:</strong></span>
-                          <span class="opinion-text">${o.text}</span>
-                          ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
-                        </div>
-                      `;
-                      }).join('')
-                    : 'Brak opinii.';
+                    const res = await fetch(`/ratings?stationId=${station._id}`);
+                    const { avgRating, count } = await res.json();
+                    document.getElementById(`avg-${station._id}`).textContent = avgRating;
+                    document.getElementById(`count-${station._id}`).textContent = count;
                 } catch {
-                  listDiv.innerHTML = 'Błąd wczytywania opinii';
+                    document.getElementById(`avg-${station._id}`).textContent = `–`;
                 }
-              
-                // 🔹 Dodawanie opinii
+
+                const btn = document.getElementById(`btn-${station._id}`);
+                const sel = document.getElementById(`select-${station._id}`);
+                const listDiv = document.getElementById(`opinion-list-${station._id}`);
+                const opinionBtn = document.getElementById(`opinion-btn-${station._id}`);
+                const opinionInput = document.getElementById(`opinion-input-${station._id}`);
+
                 if (token) {
-                  opinionBtn.disabled = false;
-                  opinionInput.disabled = false;
-              
-                  opinionBtn.addEventListener('click', async () => {
-                    const text = opinionInput.value.trim();
-                    if (!text) return alert('Opinia nie może być pusta');
-                    if (text.length > 60) return alert('Opinia za długa (max 60 znaków)');
-              
-                    const resp = await fetch('/opinions', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                      },
-                      body: JSON.stringify({ stationId: station._id, text })
-                    });
-              
-                    if (resp.ok) {
-                      alert('Dziękujemy za opinię!');
-                      opinionInput.value = '';
-                      const refreshed = await fetch(`/opinions?stationId=${station._id}`);
-                      const data = await refreshed.json();
-                      listDiv.innerHTML = data.map(o => {
-                        const canDelete = isAdmin || (o.user._id === currentUserId);
-                        return `
-                          <div>
-                            <strong>${o.user.username}:</strong> ${o.text}
-                            ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
-                          </div>
-                        `;
-                      }).join('');
-                      // Re-aktywuj eventy po odświeżeniu
-                      attachDeleteHandlers();
-                    } else {
-                      alert('Błąd przy zapisie opinii');
-                    }
-                  });
-                } else {
-                  opinionBtn.disabled = true;
-                  opinionInput.disabled = true;
-                }
-              
-                // 🔹 Usuwanie opinii – przypisanie eventów
-                function attachDeleteHandlers() {
-                  document.querySelectorAll(`#opinion-list-${station._id} .delete-opinion`).forEach(btn => {
+                    btn.disabled = false;
+                    sel.disabled = false;
+                    opinionBtn.disabled = false;
+                    opinionInput.disabled = false;
+
                     btn.addEventListener('click', async () => {
-                      const id = btn.dataset.id;
-                      const confirmDelete = confirm("Czy na pewno chcesz usunąć tę opinię?");
-                      if (!confirmDelete) return;
-              
-                      const resp = await fetch(`/opinions/${id}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${token}` }
-                      });
-              
-                      if (resp.ok) {
-                        alert("Opinia usunięta");
-                        const refreshed = await fetch(`/opinions?stationId=${station._id}`);
-                        const data = await refreshed.json();
-                        listDiv.innerHTML = data.map(o => {
-                          const canDelete = isAdmin || (o.user._id === currentUserId);
-                          return `
-                            <div>
-                              <strong>${o.user.username}:</strong> ${o.text}
-                              ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
-                            </div>
-                          `;
-                        }).join('');
-                        attachDeleteHandlers(); // 🔁 Ponownie przypisz eventy
-                      } else {
-                        alert("Nie udało się usunąć opinii");
-                      }
+                        const rating = Number(sel.value);
+                        if (!rating) return alert('Wybierz ocenę!');
+                        const post = await fetch('/ratings', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ stationId: station._id, rating })
+                        });
+                        if (post.ok) {
+                            alert('Dziękujemy za ocenę!');
+                            const again = await fetch(`/ratings?stationId=${station._id}`);
+                            const upd = await again.json();
+                            document.getElementById(`avg-${station._id}`).textContent = upd.avgRating;
+                            document.getElementById(`count-${station._id}`).textContent = upd.count;
+                        } else {
+                            alert('Błąd przy zapisie oceny');
+                        }
                     });
-                  });
+
+                    opinionBtn.addEventListener('click', async () => {
+                        const text = opinionInput.value.trim();
+                        if (!text) return alert('Opinia nie może być pusta');
+                        if (text.length > 60) return alert('Opinia za długa (max 60 znaków)');
+                        const resp = await fetch('/opinions', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ stationId: station._id, text })
+                        });
+                        if (resp.ok) {
+                            alert('Dziękujemy za opinię!');
+                            opinionInput.value = '';
+                            const refreshed = await fetch(`/opinions?stationId=${station._id}`);
+                            const data = await refreshed.json();
+                            listDiv.innerHTML = data.map(o => {
+                                const canDelete = isAdmin || (o.user._id === currentUserId);
+                                return `
+                                    <div class="opinion-item">
+                                        <span class="opinion-user"><strong>${o.user.username}:</strong></span>
+                                        <span class="opinion-text">${o.text}</span>
+                                        ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
+                                    </div>
+                                `;
+                            }).join('');
+                            attachDeleteHandlers();
+                        } else {
+                            alert('Błąd przy zapisie opinii');
+                        }
+                    });
+                } else {
+                    btn.disabled = true;
+                    sel.disabled = true;
+                    opinionBtn.disabled = true;
+                    opinionInput.disabled = true;
                 }
-              
+
+                try {
+                    const res = await fetch(`/opinions?stationId=${station._id}`);
+                    const opinions = await res.json();
+                    listDiv.innerHTML = opinions.length
+                        ? opinions.map(o => {
+                            const canDelete = isAdmin || (o.user._id === currentUserId);
+                            return `
+                                <div class="opinion-item">
+                                    <span class="opinion-user"><strong>${o.user.username}:</strong></span>
+                                    <span class="opinion-text">${o.text}</span>
+                                    ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
+                                </div>
+                            `;
+                        }).join('')
+                        : 'Brak opinii.';
+                } catch {
+                    listDiv.innerHTML = 'Błąd wczytywania opinii';
+                }
+
+                function attachDeleteHandlers() {
+                    document.querySelectorAll(`#opinion-list-${station._id} .delete-opinion`).forEach(btn => {
+                        btn.addEventListener('click', async () => {
+                            const id = btn.dataset.id;
+                            if (!confirm("Czy na pewno chcesz usunąć tę opinię?")) return;
+                            const resp = await fetch(`/opinions/${id}`, {
+                                method: 'DELETE',
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            if (resp.ok) {
+                                alert("Opinia usunięta");
+                                const refreshed = await fetch(`/opinions?stationId=${station._id}`);
+                                const data = await refreshed.json();
+                                listDiv.innerHTML = data.map(o => {
+                                    const canDelete = isAdmin || (o.user._id === currentUserId);
+                                    return `
+                                        <div class="opinion-item">
+                                            <span class="opinion-user"><strong>${o.user.username}:</strong></span>
+                                            <span class="opinion-text">${o.text}</span>
+                                            ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
+                                        </div>
+                                    `;
+                                }).join('');
+                                attachDeleteHandlers();
+                            } else {
+                                alert("Nie udało się usunąć opinii");
+                            }
+                        });
+                    });
+                }
+
                 attachDeleteHandlers();
-              });
-
-
+            });
 
             enableMarkerRemoval(marker, station.lat, station.lng);
         });
 
+        // 💡 Wygeneruj wyniki wyszukiwania
+        renderSearchResults(stations, document.getElementById("keywordInput").value);
+
         console.log("Ładowanie stacji zakończone.");
-
     } catch (error) {
-        console.error(error.message);
+        console.error("Błąd:", error.message);
     }
-
 }
-// Obsługa zmiany checkboxów w czasie rzeczywistym
-document.querySelectorAll('.fuelFilter').forEach(checkbox => {
-    checkbox.addEventListener('change', () => {
-        console.log("Zmieniono filtr paliwa, przeładowuję markery...");
+
+
+function renderSearchResults(stations, keyword) {
+    const resultsDiv = document.getElementById("searchResults");
+    const keywords = keyword ? keyword.split(' ').map(k => k.trim().toLowerCase()) : [];
+
+    const matched = keywords.length
+        ? stations.filter(station =>
+            keywords.every(kw =>
+                (station[kw] === true) ||
+                (station.name && station.name.toLowerCase().includes(kw))
+            )
+        )
+        : [];
+
+        resultsDiv.innerHTML = matched.length
+        ? matched.map(s => {
+            const logo = getStationIconURL(s.name);
+            return `
+            <div class="search-item" data-id="${s._id}" data-lat="${s.lat}" data-lng="${s.lng}">
+                ${logo ? `<img src="${logo}" class="search-logo" alt="logo">` : ''}
+                <div class="search-inline-text">${s.name} – ${s.address}</div>
+            </div>
+        `;
+        }).join('')
+        : '<div>Brak wyników</div>';
+
+    // Kliknięcie w wynik listy
+    resultsDiv.querySelectorAll('div[data-lat]').forEach(el => {
+        el.addEventListener('click', () => {
+            const lat = parseFloat(el.dataset.lat);
+            const lng = parseFloat(el.dataset.lng);
+
+            map.setView([lat, lng], 16);
+
+            // otwórz popup i sidePanel
+            stationLayer.eachLayer(layer => {
+                const pos = layer.getLatLng();
+                if (Math.abs(pos.lat - lat) < 0.0001 && Math.abs(pos.lng - lng) < 0.0001) {
+                    layer.openPopup();           // pokaż dymek
+                    setTimeout(() => layer.fire('popupopen'), 100); // 🔁 wywołaj sidePanel
+                }
+            });
+        });
+    });
+}
+
+
+
+// 🔍 Aktywuj filtr przy wpisywaniu
+const searchInput = document.getElementById("keywordInput");
+if (searchInput) {
+    searchInput.addEventListener("input", () => {
         loadStations();
     });
-});
+}
+
+
 
 // Funkcja zwracająca ikonę stacji
 function getStationIcon(name) {
@@ -532,6 +735,26 @@ function getStationIcon(name) {
             return L.divIcon({ className: 'custom-icon', html: '<div style="background-color: gray; width: 32px; height: 32px; border-radius: 50%;"></div>' });
     }
 }
+function getStationIconURL(name) {
+    switch (name) {
+        case 'Orlen':
+            return 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOYwBMkqpW77rZwpZQoqd_dz3HgwzeEqJ5eQ&s';
+        case 'Shell':
+            return 'https://upload.wikimedia.org/wikipedia/en/thumb/e/e8/Shell_logo.svg/1024px-Shell_logo.svg.png';
+        case 'BP':
+            return 'https://www.bp.com/apps/settings/wcm/designs/refresh/bp/images/navigation/bp-logo.svg';
+        case 'MOYA':
+            return 'https://instreamgroup.com/wp-content/uploads/2020/10/moya-duze.png';
+        case 'MOL':
+            return 'https://molpolska.pl/img/logo-mol-colorful.88751645.svg';
+        case 'AMIC Energy':
+            return 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJob7yZyCsmByf8rWXDKS2kNBM7C7MdTmNXg&s';
+        case 'Circle K':
+            return 'https://e7.pngegg.com/pngimages/157/520/png-clipart-circle-k-retail-convenience-shop-business-franchising-business-text-rectangle-thumbnail.png';
+        default:
+            return null; // brak logo
+    }
+}
 
 // Funkcja, która zwraca listę dostępnych paliw
 function getAvailableFuels(data) {
@@ -545,6 +768,9 @@ function getAvailableFuels(data) {
 
     return availableFuels.length > 0 ? availableFuels.join(", ") : "Brak paliw";
 }
+
+
+
 
 
 // Obsługa kliknięcia na marker w trybie usuwania
@@ -806,11 +1032,17 @@ document.getElementById("themeSwitch").addEventListener("change", function() {
 
 const stationLayer = L.layerGroup().addTo(map);
 
-// Funkcja do pokazywania/ukrywania filtrów po zalogowaniu
 function toggleFilters(visible) {
-    document.getElementById('filters').style.display = visible ? 'block' : 'none';
-}
+    const mapContainer = document.getElementById('mapContainer');
 
+    if (visible) {
+        mapContainer.classList.add('fade-in');
+        mapContainer.classList.remove('hidden');
+    } else {
+        mapContainer.classList.remove('fade-in');
+        mapContainer.classList.add('hidden');
+    }
+}
 // Upewnienie się, że dane ładują się na starcie
 document.addEventListener("DOMContentLoaded", () => {
     console.log("Strona załadowana, inicjalizuję mapę...");
