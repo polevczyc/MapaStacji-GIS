@@ -47,11 +47,16 @@ const icons = Object.fromEntries(
 );
 
 const startIcon = L.icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+  iconUrl: 'icons/you.png',
   iconSize: [32, 32],
   iconAnchor: [16, 32]
 });
-const endIcon = startIcon;
+
+const endIcon = L.icon({
+  iconUrl: 'icons/end.png',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32]  
+});
 
 // Punkty trasy
 let startPoint = null;
@@ -65,19 +70,17 @@ function handleMapClick(e) {
         if (startPoint) {
             map.removeLayer(startPoint);
         }
-        startPoint = L.marker([lat, lng], { icon: startIcon, draggable: true }).addTo(map)
-            .bindPopup("Punkt Początkowy")
-            .openPopup();
+        startPoint = L.marker([lat, lng], { icon: startIcon, draggable: false }).addTo(map)
+        activeAction = null;
+        updateButtonsState();
     } else if (activeAction === 'end') {
         if (endPoint) {
             map.removeLayer(endPoint);
         }
-        endPoint = L.marker([lat, lng], { icon: endIcon, draggable: true }).addTo(map)
-            .bindPopup("Punkt Końcowy")
-            .openPopup();
-            activeAction = null;
+        endPoint = L.marker([lat, lng], { icon: endIcon, draggable: false }).addTo(map)
+        activeAction = null;
+        updateButtonsState();
     }
-    updateButtonsState();
 }
 
 function decodePolyline(encoded) {
@@ -160,28 +163,63 @@ function clearRoute() {
 // Obsługa przycisków
 let activeAction = null;
 
+const setStartBtn = document.getElementById('setStart');
+const setEndBtn = document.getElementById('setEnd');
+
 document.getElementById('setStart').addEventListener('click', () => {
     activeAction = 'start';
-    alert("Wybierz punkt początkowy na mapie");
+    setStartBtn.classList.add('active-action');
+    setEndBtn.classList.remove('active-action');
 });
 
 document.getElementById('setEnd').addEventListener('click', () => {
     activeAction = 'end';
-    alert("Wybierz punkt końcowy na mapie");
+    setEndBtn.classList.add('active-action');
+    setStartBtn.classList.remove('active-action');
 });
 
-document.getElementById('calculateRoute').addEventListener('click', calculateRoute);
-document.getElementById('clearRoute').addEventListener('click', clearRoute);
+document.getElementById('calculateRoute').addEventListener('click', () => {
+    calculateRoute();
+    document.getElementById('setStart').classList.remove('active-action');
+    document.getElementById('setEnd').classList.remove('active-action');
+    
+    if (startPoint && endPoint) {
+        const group = L.featureGroup([startPoint, endPoint]);
+        map.fitBounds(group.getBounds().pad(0.2)); // margines
+    }
+});
+
+document.getElementById('clearRoute').addEventListener('click', () => {
+    clearRoute();
+    stationLayer.eachLayer(marker => {
+        map.addLayer(marker);
+    });
+    map.setView([54.51086917328015, 18.506788268877372], 11);   // pozycja poczatkowa
+});
 
 function updateButtonsState() {
     const calculateRouteBtn = document.getElementById('calculateRoute');
     const clearRouteBtn = document.getElementById('clearRoute');
+    const setStartBtn = document.getElementById('setStart');
+    const setEndBtn = document.getElementById('setEnd');
 
     // Przyciski calculateRoute aktywny tylko jeśli są oba punkty
     calculateRouteBtn.disabled = !(startPoint && endPoint);
 
     // Przyciski clearRoute aktywny tylko jeśli istnieje trasa na mapie
     clearRouteBtn.disabled = routeLayer.getLayers().length === 0;
+
+    // Kontrola klas active-action na setStart i setEnd
+    if (activeAction === 'start') {
+        setStartBtn.classList.add('active-action');
+        setEndBtn.classList.remove('active-action');
+    } else if (activeAction === 'end') {
+        setStartBtn.classList.remove('active-action');
+        setEndBtn.classList.add('active-action');
+    } else {
+        setStartBtn.classList.remove('active-action');
+        setEndBtn.classList.remove('active-action');
+    }
 }
 
 // Dodanie obsługi kliknięć na mapie
@@ -206,235 +244,6 @@ function checkLoginStatus() {
     }
 }
 
-/*
-async function loadStations() {
-    console.log("Ładowanie stacji...");
-
-    const keyword = document.getElementById("keywordInput")?.value?.trim().toLowerCase();
-    stationLayer.clearLayers();
-
-    try {
-        const response = await fetch('/markers');
-        if (!response.ok) throw new Error('Błąd podczas ładowania stacji');
-
-        const stations = await response.json();
-        console.log("Pobrane stacje:", stations);
-
-        const excluded = ["_id", "lat", "lng", "__v", "address", "close", "open"];
-        const keywords = keyword ? keyword.split(' ').map(k => k.trim().toLowerCase()) : [];
-        
-
-        filtered.forEach(station => {
-            const availableFuels = Object.keys(station)
-            .filter(key => station[key] === true)
-            .map(fuel => fuel.toString());
-    
-        let icon = getStationIcon(station.name);
-    
-        const popupHtml = `
-            <strong>${station.name}</strong><br>
-            ul. ${station.address}<br><br>
-        `;
-    
-        const marker = L.marker([station.lat, station.lng], { icon })
-            .addTo(stationLayer)
-            .bindTooltip(station.name)
-            .bindPopup(popupHtml);
-
-            marker.on('popupopen', async () => {
-                document.getElementById("sidePanel").classList.remove("hidden");
-                document.getElementById("ratingSection").innerHTML = `
-                    <h3>${station.name}</h3>
-                    <p><strong>ul. ${station.address}</strong></p>
-                    Godziny otwarcia:<br> ${station.open} - ${station.close}<br>
-                    Dostępne paliwa oraz usługi:<br> ${availableFuels.join(", ") || "Brak paliw"}<br><br>
-                    <div class="rating-container" id="rating-container-${station._id}">
-                        <div><strong>Ocena użytkowników:</strong> <span id="avg-${station._id}">–</span></div>
-                        <div><strong>Ilość ocen:</strong> <span id="count-${station._id}">–</span></div>
-                        <select id="select-${station._id}">
-                        <option value="">Twoja ocena</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        </select>
-                        <button id="btn-${station._id}">Oceń</button>
-                    </div>
-                `;
-
-                document.getElementById("opinionSection").innerHTML = `
-                    <div id="opinion-list-${station._id}" class="opinion-list">Ładowanie opinii...</div>
-                    <textarea id="opinion-input-${station._id}" maxlength="60" placeholder="Dodaj opinię (max 60 znaków)"></textarea>
-                    <button id="opinion-btn-${station._id}">Wyślij</button>
-                `;
-
-                const token = localStorage.getItem('token');
-                try {
-                    const res = await fetch(`/ratings?stationId=${station._id}`);
-                    const { avgRating, count } = await res.json();
-                    document.getElementById(`avg-${station._id}`).textContent = avgRating;
-                    document.getElementById(`count-${station._id}`).textContent = count;
-                } catch (err) {
-                    console.error("Błąd przy pobieraniu oceny:", err);
-                    document.getElementById(`avg-${station._id}`).textContent = `–`;
-                }
-
-                const btn = document.getElementById(`btn-${station._id}`);
-                const sel = document.getElementById(`select-${station._id}`);
-
-                if (token) {
-                    btn.disabled = false;
-                    sel.disabled = false;
-
-                    btn.addEventListener('click', async () => {
-                        const rating = Number(sel.value);
-                        if (!rating) return alert('Wybierz ocenę!');
-
-                        const post = await fetch('/ratings', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify({ stationId: station._id, rating })
-                        });
-
-                        if (post.ok) {
-                            alert('Dziękujemy za ocenę!');
-                            const again = await fetch(`/ratings?stationId=${station._id}`);
-                            const upd = await again.json();
-                            document.getElementById(`avg-${station._id}`).textContent = upd.avgRating;
-                            document.getElementById(`count-${station._id}`).textContent = upd.count;
-                        } else {
-                            alert('Błąd przy zapisie oceny');
-                        }
-                    });
-                } else {
-                    btn.disabled = true;
-                    sel.disabled = true;
-                }
-
-                const listDiv = document.getElementById(`opinion-list-${station._id}`);
-                const opinionBtn = document.getElementById(`opinion-btn-${station._id}`);
-                const opinionInput = document.getElementById(`opinion-input-${station._id}`);
-
-                const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
-                const currentUserId = payload?.id;
-                const isAdmin = payload?.isAdmin;
-
-                try {
-                    const res = await fetch(`/opinions?stationId=${station._id}`);
-                    const opinions = await res.json();
-
-                    listDiv.innerHTML = opinions.length
-                        ? opinions.map(o => {
-                            const canDelete = isAdmin || (o.user._id === currentUserId);
-                            return `
-                                <div class="opinion-item">
-                                    <span class="opinion-user"><strong>${o.user.username}:</strong></span>
-                                    <span class="opinion-text">${o.text}</span>
-                                    ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
-                                </div>
-                            `;
-                        }).join('')
-                        : 'Brak opinii.';
-                } catch {
-                    listDiv.innerHTML = 'Błąd wczytywania opinii';
-                }
-
-                if (token) {
-                    opinionBtn.disabled = false;
-                    opinionInput.disabled = false;
-
-                    opinionBtn.addEventListener('click', async () => {
-                        const text = opinionInput.value.trim();
-                        if (!text) return alert('Opinia nie może być pusta');
-                        if (text.length > 60) return alert('Opinia za długa (max 60 znaków)');
-
-                        const resp = await fetch('/opinions', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify({ stationId: station._id, text })
-                        });
-
-                        if (resp.ok) {
-                            alert('Dziękujemy za opinię!');
-                            opinionInput.value = '';
-                            const refreshed = await fetch(`/opinions?stationId=${station._id}`);
-                            const data = await refreshed.json();
-                            listDiv.innerHTML = data.map(o => {
-                                const canDelete = isAdmin || (o.user._id === currentUserId);
-                                return `
-                                    <div class="opinion-item">
-                                        <span class="opinion-user"><strong>${o.user.username}:</strong></span>
-                                        <span class="opinion-text">${o.text}</span>
-                                        ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
-                                    </div>
-                                `;
-                            }).join('');
-                            attachDeleteHandlers();
-                        } else {
-                            alert('Błąd przy zapisie opinii');
-                        }
-                    });
-                } else {
-                    opinionBtn.disabled = true;
-                    opinionInput.disabled = true;
-                }
-
-                function attachDeleteHandlers() {
-                    document.querySelectorAll(`#opinion-list-${station._id} .delete-opinion`).forEach(btn => {
-                        btn.addEventListener('click', async () => {
-                            const id = btn.dataset.id;
-                            const confirmDelete = confirm("Czy na pewno chcesz usunąć tę opinię?");
-                            if (!confirmDelete) return;
-
-                            const resp = await fetch(`/opinions/${id}`, {
-                                method: 'DELETE',
-                                headers: { 'Authorization': `Bearer ${token}` }
-                            });
-
-                            if (resp.ok) {
-                                alert("Opinia usunięta");
-                                const refreshed = await fetch(`/opinions?stationId=${station._id}`);
-                                const data = await refreshed.json();
-                                listDiv.innerHTML = data.map(o => {
-                                    const canDelete = isAdmin || (o.user._id === currentUserId);
-                                    return `
-                                        <div class="opinion-item">
-                                            <span class="opinion-user"><strong>${o.user.username}:</strong></span>
-                                            <span class="opinion-text">${o.text}</span>
-                                            ${canDelete ? `<button class="delete-opinion" data-id="${o._id}">🗑</button>` : ''}
-                                        </div>
-                                    `;
-                                }).join('');
-                                attachDeleteHandlers();
-                            } else {
-                                alert("Nie udało się usunąć opinii");
-                            }
-                        });
-                    });
-                }
-
-                attachDeleteHandlers();
-            });
-
-            enableMarkerRemoval(marker, station.lat, station.lng);
-        });
-
-        console.log("Ładowanie stacji zakończone.");
-        renderSearchResults(stations, document.getElementById("keywordInput").value);
-
-    } catch (error) {
-        console.error(error.message);
-    }
-}
-*/
-
 async function loadStations() {
     console.log("Ładowanie stacji...");
     stationLayer.clearLayers();
@@ -454,22 +263,35 @@ async function loadStations() {
             const icon = getStationIcon(station.name);
             const popupHtml = `
                 <strong>${station.name}</strong><br>
-                ul. ${station.address}<br><br>
+                ul. ${station.address}<br>
             `;
 
             const marker = L.marker([station.lat, station.lng], { icon })
                 .addTo(stationLayer)
-                .bindTooltip(station.name)
                 .bindPopup(popupHtml);
+                marker.stationData = station;
+
+            marker.on('click', (e) => {
+                if (activeAction === 'end') {
+                    if (endPoint) {
+                        map.removeLayer(endPoint);
+                    }
+                    const { lat, lng } = e.latlng;
+                    endPoint = L.marker([lat, lng], { icon: endIcon, draggable: true }).addTo(map)
+                    activeAction = null;
+                    updateButtonsState();
+                }
+            });
 
             marker.on('popupopen', async () => {
                 document.getElementById("sidePanel").classList.remove("hidden");
+                map.setView([station.lat, station.lng], 16);
 
                 document.getElementById("ratingSection").innerHTML = `
                     <h3>${station.name}</h3>
                     <p><strong>ul. ${station.address}</strong></p>
-                    Godziny otwarcia:<br> ${station.open} - ${station.close}<br>
-                    Dostępne paliwa i usługi:<br> ${availableFuels.join(", ") || "Brak paliw"}<br><br>
+                    <b>Godziny otwarcia:</b><br> ${station.open} - ${station.close}<br>
+                    <b>Dostępne paliwa/usługi:</b><br> ${availableFuels.join(", ") || "Brak paliw"}<br>
                     <div class="rating-container" id="rating-container-${station._id}">
                         <div><strong>Ocena użytkowników:</strong> <span id="avg-${station._id}">–</span></div>
                         <div><strong>Ilość ocen:</strong> <span id="count-${station._id}">–</span></div>
@@ -482,6 +304,7 @@ async function loadStations() {
                             <option value="5">5</option>
                         </select>
                         <button id="btn-${station._id}">Oceń</button>
+
                     </div>
                 `;
 
@@ -489,8 +312,9 @@ async function loadStations() {
                     <div id="opinion-list-${station._id}" class="opinion-list">Ładowanie opinii...</div>
                     <textarea id="opinion-input-${station._id}" maxlength="60" placeholder="Dodaj opinię (max 60 znaków)"></textarea>
                     <button id="opinion-btn-${station._id}">Wyślij</button>
+                    <br><button id="navigate-${station._id}" class="navigate-btn">Prowadź</button>
                 `;
-
+                
                 const token = localStorage.getItem('token');
                 const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
                 const currentUserId = payload?.id;
@@ -627,6 +451,17 @@ async function loadStations() {
                         });
                     });
                 }
+                document.getElementById(`navigate-${station._id}`).addEventListener('click', () => {
+                    if (endPoint) {
+                        map.removeLayer(endPoint);
+                    }
+
+                    endPoint = L.marker([station.lat, station.lng], { icon: endIcon, draggable: true }).addTo(map);
+                    activeAction = null;
+                    updateButtonsState();
+                    document.querySelectorAll('.navigate-btn').forEach(btn => btn.classList.remove('active'));
+                    document.getElementById(`navigate-${station._id}`).classList.add('active');
+                });
 
                 attachDeleteHandlers();
             });
@@ -643,17 +478,19 @@ async function loadStations() {
     }
 }
 
-
 function renderSearchResults(stations, keyword) {
     const resultsDiv = document.getElementById("searchResults");
     const keywords = keyword ? keyword.split(' ').map(k => k.trim().toLowerCase()) : [];
 
     const matched = keywords.length
         ? stations.filter(station =>
-            keywords.every(kw =>
-                (station[kw] === true) ||
-                (station.name && station.name.toLowerCase().includes(kw))
-            )
+            keywords.every(kw => {
+                const inName = station.name && station.name.toLowerCase().includes(kw);
+                const inKeys = Object.keys(station).some(k =>
+                    typeof station[k] === 'boolean' && station[k] === true && k.toLowerCase().includes(kw)
+                );
+                return inName || inKeys;
+            })
         )
         : [];
 
@@ -667,7 +504,7 @@ function renderSearchResults(stations, keyword) {
             </div>
         `;
         }).join('')
-        : '<div>Brak wyników</div>';
+        : '';
 
     // Kliknięcie w wynik listy
     resultsDiv.querySelectorAll('div[data-lat]').forEach(el => {
@@ -682,24 +519,37 @@ function renderSearchResults(stations, keyword) {
                 const pos = layer.getLatLng();
                 if (Math.abs(pos.lat - lat) < 0.0001 && Math.abs(pos.lng - lng) < 0.0001) {
                     layer.openPopup();           // pokaż dymek
-                    setTimeout(() => layer.fire('popupopen'), 100); // 🔁 wywołaj sidePanel
+                    setTimeout(() => layer.fire('popupopen'), 100); // wywołaj sidePanel
                 }
             });
         });
     });
+
+    stationLayer.eachLayer(layer => {
+        if (!layer.stationData) return;
+
+        const match = matched.find(s => s._id === layer.stationData._id);
+        if (match) {
+            map.addLayer(layer); // pokaż marker
+        } else {
+            map.removeLayer(layer); // ukryj marker
+        }
+    });
+
+    if (!keywords.length) {
+        stationLayer.eachLayer(layer => {
+            map.addLayer(layer); // przy braku frazy: pokaż wszystko
+        });
+    }
 }
 
-
-
-// 🔍 Aktywuj filtr przy wpisywaniu
+// Aktywuj filtr przy wpisywaniu
 const searchInput = document.getElementById("keywordInput");
 if (searchInput) {
     searchInput.addEventListener("input", () => {
         loadStations();
     });
 }
-
-
 
 // Funkcja zwracająca ikonę stacji
 function getStationIcon(name) {
@@ -719,6 +569,7 @@ function getStationIcon(name) {
       });
   }
 }
+
 function getStationIconURL(name) {
     switch (name) {
         case 'Orlen':
@@ -735,6 +586,8 @@ function getStationIconURL(name) {
             return 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJob7yZyCsmByf8rWXDKS2kNBM7C7MdTmNXg&s';
         case 'Circle K':
             return 'https://e7.pngegg.com/pngimages/157/520/png-clipart-circle-k-retail-convenience-shop-business-franchising-business-text-rectangle-thumbnail.png';
+        case 'Pod Żaglami':
+            return 'https://storage.googleapis.com/rc-data-search-imgs-e3f2bfb0d31a3004/img-hash-v1-bc9193c6cc399267.jpg';
         default:
             return null; // brak logo
     }
@@ -766,9 +619,6 @@ function setActiveAdminAction(action) {
   activeAdminAction = action;   // 'add', 'remove' albo null
   updateActiveButtonStyle();
 }
-
-
-
 
 // Obsługa kliknięcia na marker w trybie usuwania
 function enableMarkerRemoval(marker, lat, lng) {
@@ -823,6 +673,7 @@ map.on('popupclose', () => {
     document.getElementById("sidePanel").classList.add("hidden");
 });
 
+// Tworzenie markera (admin)
 async function addMarkerAt(lat, lng) {
     const description = prompt('Wprowadź opis markera:');
     if (!description) {
@@ -855,7 +706,6 @@ async function addMarkerAt(lat, lng) {
     }
 
     setActiveAdminAction(null);
-    //updateActiveButtonStyle();
 }
 
 // button highlight
@@ -999,7 +849,6 @@ document.getElementById("showTopStations").addEventListener("click", async () =>
     document.getElementById("top3Modal").classList.add("hidden");
   }
 
-
 // Funkcja do wyświetlania komunikatu
 function showMessage(message) {
     const messageContainer = document.getElementById("messageContainer");
@@ -1042,6 +891,7 @@ function toggleFilters(visible) {
         mapContainer.classList.add('hidden');
     }
 }
+
 // Upewnienie się, że dane ładują się na starcie
 document.addEventListener("DOMContentLoaded", () => {
     console.log("Strona załadowana, inicjalizuję mapę...");

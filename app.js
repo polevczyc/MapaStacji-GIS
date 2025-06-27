@@ -53,8 +53,6 @@ const opinionSchema = new mongoose.Schema({
 
 const Opinion = mongoose.model('Opinion', opinionSchema);
 
-
-
 // Middleware do weryfikacji tokena JWT
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
@@ -236,7 +234,6 @@ app.get('/top-stations', async (req, res) => {
   }
 });
 
-
 // Endpointy dla użytkowników
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
@@ -291,7 +288,6 @@ app.delete('/markers', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Błąd przy usuwaniu markera.' });
     }
 });
-
 
 // Pobieranie markerów (dla wszystkich użytkowników)
 app.get('/markers', async (req, res) => {

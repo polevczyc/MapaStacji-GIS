@@ -19,7 +19,7 @@ body, html {
 }
 #map {
     width: 70%;
-    height: 65vh;
+    height: 70vh;
     border-radius: 12px;
     border: 4px solid #e6e6e6;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -75,10 +75,14 @@ h1 {
     justify-content: space-between;
     align-items: center;
     margin: 10px;
-    padding: 10px 20px;
     background-color: #ffffff;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1rem;
+    padding: 15px 20px;
 }
 
 #controls, #adminControls {
@@ -123,8 +127,12 @@ button#calculateRoute:hover { background-color: #0056b3; }
 button#clearRoute { background-color: #dc3545; color: white; }
 button#clearRoute:hover { background-color: #c82333; }
 
-button#setStart, button#setEnd { background-color: #28a745; color: white; }
+button#setStart, button#setEnd { background-color: #e6ffe6; color: black; border: 2px solid green; }
 button#setStart:hover, button#setEnd:hover { background-color: #218838; }
+
+button#setStart.active-action, button#setEnd.active-action {
+    background-color: #218838 !important; 
+}
 
 button#addMarker { background-color: #6c757d; color: white; }
 button#addMarker:hover { border: 2px solid #ff9900; }
@@ -160,10 +168,6 @@ input {
 h2 {
     text-align: center;
     margin: 10px 0;
-}
-
-#userPanel {
-    padding: 15px 20px;
 }
 
 #auth {
@@ -434,7 +438,6 @@ input:checked + .slider:before {
 }
 #searchResults div {
     padding: 5px 8px;
-    cursor: pointer;
 }
 
 #searchResults div:hover {
@@ -500,7 +503,7 @@ button:disabled {
     margin-left: 15px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     overflow-y: auto;
-    height: 63vh;
+    height: auto;
   }
   
   .dark-mode #sidePanel {
@@ -668,17 +671,6 @@ textarea[id^="opinion-input-"] {
     color: #333;
 }
 
-
-#userPanel {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 1rem;
-    background: none;
-    box-shadow: none;
-    padding: 0;
-}
-
 .dark-mode #userPanel {
     background: none !important;
     box-shadow: none !important;
@@ -700,4 +692,20 @@ textarea[id^="opinion-input-"] {
 
 .dark-mode h1 {
     color: white !important;
+}
+
+.navigate-btn {
+    background-color: #e6ffe6;
+}
+
+.navigate-btn:hover {
+    border: 2px solid #007bff;
+}
+
+ .dark-mode .navigate-btn{
+    background-color: rgb(53, 53, 53);
+}
+
+.navigate-btn.active {
+    background-color: #007bff !important;
 }
