@@ -8,8 +8,7 @@ const bodyParser = require('body-parser');
 
 const app = express();
 const PORT = 3000;
-const JWT_SECRET = 'supersecretkey'; // Zmień na bezpieczny klucz w produkcji
-
+const JWT_SECRET = 'supersecretkey'; 
 app.use(bodyParser.json()); // Obsługa JSON w żądaniach
 app.use(express.static(path.join(__dirname, 'public')));
 
